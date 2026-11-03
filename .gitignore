@@ -1,0 +1,14 @@
+vendor/
+node_modules/
+storage/
+.env
+env
+error_log
+config.php
+config_db.php
+config1.php
+nirth_secure_auth.json
+applicationform/recruitmentcell  /class1/BaseClass.php
+recruit_tech_2023/class/BaseClass.php
+application/src/app/Models/Paymentgateway.php
+screening/src/app/Models/Paymentgateway.php

@@ -1,0 +1,48 @@
+# BEGIN WordPress 
+RewriteEngine On 
+# FIX 1.4: Block XSS & Malicious URL Parameters
+RewriteCond %{QUERY_STRING} (<|>|%3C|%3E|<script|<iframe|javascript:|onmouseover|onclick|eval|--|alert\(|document\.cookie|<svg|onload=|onerror=|prompt\() [NC]
+RewriteRule ^ - [F,L]
+# Allow only safe HTTP methods
+RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD)$ [NC]
+RewriteRule .* - [F,L]
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}] 
+RewriteBase / 
+RewriteRule ^404\.php$ - [L] 
+RewriteCond %{REQUEST_FILENAME} !-f 
+RewriteCond %{REQUEST_FILENAME} !-d 
+RewriteRule . /404.php [L] 
+# END WordPress 
+# HTTPS forced 
+<IfModule mod_rewrite.c> 
+RewriteEngine On 
+RewriteCond %{HTTPS} off 
+RewriteRule ^(.*)$ https://%{SERVER_NAME}%{REQUEST_URI} [R=301,L] 
+# FIX 1.11: Block sensitive development config files
+<FilesMatch "^(composer\.(json|lock)|package\.json|package-lock\.json|phpunit\.xml|\.env|yarn\.lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+# Block vendor and node_modules directories
+RewriteRule ^(vendor|node_modules|\.git)(/|$) - [F,L]
+# Redirect to www 
+</IfModule>
+# FIX 1.7, 1.9, 1.13, 1.14 - Safe Security Headers
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always unset X-Powered-By
+    Header always set Content-Security-Policy "frame-ancestors 'self'; form-action 'self';"
+</IfModule>
+ServerSignature Off
+Options -Indexes
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php82” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
