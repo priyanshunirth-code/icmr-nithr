@@ -12,3 +12,5 @@ applicationform/recruitmentcell  /class1/BaseClass.php
 recruit_tech_2023/class/BaseClass.php
 application/src/app/Models/Paymentgateway.php
 screening/src/app/Models/Paymentgateway.php
+intranet-it-dashboard/config/config.php
+intranet-it-dashboard/data/
