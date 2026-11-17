@@ -157,7 +157,11 @@ $is_master = can('manage_users');
                     <small><?= e($user['role']) ?></small>
                 </div>
             </button>
-            <button type="button" id="logoutBtn" class="logout-link" title="Logout">↪</button>
+            <form method="post" action="index.php" style="margin:0;">
+                <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="logout">
+                <button type="submit" class="logout-link" title="Logout">↪</button>
+            </form>
         </div>
     </aside>
 
@@ -179,6 +183,11 @@ $is_master = can('manage_users');
                     <small>Internal network · <?= date('d M Y, H:i') ?></small>
                 </div>
             </div>
+            <form method="post" action="index.php" class="topbar-logout-form">
+                <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="logout">
+                <button type="submit" class="btn btn-outline btn-logout">Logout</button>
+            </form>
         </header>
 
         <?php if (!empty($user['must_change_password'])): ?>
