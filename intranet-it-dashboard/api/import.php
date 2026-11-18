@@ -198,7 +198,12 @@ try {
 }
 fclose($handle);
 
-$summary = "Imported {$type}: {$added} added, {$updated} updated, {$skipped} duplicates skipped, " . count($invalid) . ' invalid rows.';
+$invalidLines = !empty($invalid) ? ' (lines ' . implode(', ', array_map(fn($item) => (string)$item['line'], array_slice($invalid, 0, 10))) . ')' : '';
+$invalidPart = count($invalid) . ' invalid' . $invalidLines;
+$summary = "{$added} added, {$skipped} duplicates skipped, {$invalidPart}";
+if ($updated > 0) {
+    $summary .= ", {$updated} updated";
+}
 $origName = (string)($_FILES['csv']['name'] ?? 'import.csv');
 log_audit($pdo, 'import', $type, null, "{$summary} (File: {$origName})");
 

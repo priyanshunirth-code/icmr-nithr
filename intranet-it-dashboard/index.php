@@ -4,12 +4,20 @@ require_once __DIR__ . '/includes/bootstrap.php';
 
 // Brute-force protection helper
 function is_locked_out(PDO $pdo, string $username, string $ip): bool {
-    $since = date('Y-m-d H:i:s', time() - 900);
-    $stmt = $pdo->prepare('
-        SELECT COUNT(*) FROM login_attempts
-        WHERE (username = ? OR ip = ?) AND success = 0 AND attempted_at >= ?
-    ');
-    $stmt->execute([$username, $ip, $since]);
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+        $stmt = $pdo->prepare('
+            SELECT COUNT(*) FROM login_attempts
+            WHERE (username = ? OR ip = ?) AND success = 0 AND attempted_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+        ');
+        $stmt->execute([$username, $ip]);
+    } else {
+        $since = date('Y-m-d H:i:s', time() - 900);
+        $stmt = $pdo->prepare('
+            SELECT COUNT(*) FROM login_attempts
+            WHERE (username = ? OR ip = ?) AND success = 0 AND attempted_at >= ?
+        ');
+        $stmt->execute([$username, $ip, $since]);
+    }
     return (int)$stmt->fetchColumn() >= 5;
 }
 
@@ -40,6 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
         $hash = $user ? (string)$user['password_hash'] : $dummy_hash;
 
         if ($user && password_verify($password, $hash)) {
+            $pdo->prepare('DELETE FROM login_attempts WHERE (username = ? OR ip = ?) AND success = 0')
+                ->execute([$username, $ip]);
             $pdo->prepare('INSERT INTO login_attempts (username, ip, success) VALUES (?, ?, 1)')
                 ->execute([$username, $ip]);
 
@@ -148,9 +158,11 @@ $is_master = can('manage_users');
             <?php endif; ?>
         </nav>
     </aside>
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
     <main class="main">
         <header class="topbar">
+            <button type="button" id="sidebarToggle" class="hamburger-btn" aria-label="Toggle menu">☰</button>
             <div class="mobile-brand">ICMR-NITHR</div>
             <div class="topbar-branding">
                 <span class="hindi-title">आई.सी.एम.आर. - राष्ट्रीय जनजातीय स्वास्थ्य अनुसंधान संस्थान, जबलपुर</span>
@@ -158,13 +170,13 @@ $is_master = can('manage_users');
             </div>
             <div class="global-search">
                 <span>⌕</span>
-                <input id="globalSearch" placeholder="Search assets, IP, user, or hostname…">
+                <input id="globalSearch" placeholder="Search across all records…">
             </div>
-            <div class="system-status">
-                <i></i>
+            <div class="system-status" id="systemStatus">
+                <i id="statusDot"></i>
                 <div>
-                    <strong>Systems Operational</strong>
-                    <small>Internal network · <?= date('d M Y, H:i') ?></small>
+                    <strong id="statusTitle">Connecting…</strong>
+                    <small id="statusSubtitle">Checking database…</small>
                 </div>
             </div>
             <div class="topbar-user-actions">
@@ -183,8 +195,8 @@ $is_master = can('manage_users');
         </header>
 
         <?php if (!empty($user['must_change_password'])): ?>
-        <div class="alert alert-warning" style="margin:20px 24px 0;">
-            <strong>Security Reminder:</strong> Your account requires a password change. Please <a href="#" data-modal="passwordModal" style="text-decoration:underline;color:inherit;font-weight:700;">update your password now</a>.
+        <div class="alert alert-warning security-reminder" style="margin:20px 24px 0;">
+            <strong>Security Reminder:</strong> Your account requires a password change. Please <button type="button" class="btn-inline-link" data-modal="passwordModal">update your password now</button>.
         </div>
         <?php endif; ?>
 
@@ -199,16 +211,10 @@ $is_master = can('manage_users');
                     <article class="metric-card">
                         <span>Total IT Assets</span>
                         <strong><?= $stats['assets'] ?></strong>
-                        <em class="trend">↗ +12 (2.9%)</em>
-                        <small>vs. previous 30 days</small>
-                        <div class="sparkline blue"></div>
                     </article>
                     <article class="metric-card">
                         <span>Total IP Records</span>
                         <strong><?= $stats['ips'] ?></strong>
-                        <em class="trend">↗ +18 (3.6%)</em>
-                        <small>vs. previous 30 days</small>
-                        <div class="sparkline blue"></div>
                     </article>
                 </div>
             </div>
@@ -297,7 +303,6 @@ $is_master = can('manage_users');
                 </div>
             </div>
             <div class="toolbar">
-                <input class="table-search" id="inventorySearch" placeholder="⌕  Search asset ID, device, serial, or assignee…">
                 <select id="inventoryCategoryFilter">
                     <option value="">All categories</option>
                     <option value="Desktop">Desktop</option>
@@ -362,7 +367,6 @@ $is_master = can('manage_users');
                 </div>
             </div>
             <div class="toolbar">
-                <input class="table-search" id="ipSearch" placeholder="⌕  Search IP address, hostname, or department…">
                 <select id="ipDeviceTypeFilter">
                     <option value="">All device types</option>
                     <option value="Desktop">Desktop</option>

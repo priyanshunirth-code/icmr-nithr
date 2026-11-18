@@ -48,14 +48,73 @@
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.toggle('active', item.dataset.view === id);
     });
-    document.querySelectorAll('.user-profile-btn').forEach(btn => {
-      btn.classList.toggle('active', id === 'profile');
-    });
+    document.querySelector('.sidebar')?.classList.remove('open');
+    document.getElementById('sidebarBackdrop')?.classList.remove('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    if (id === 'inventory') loadInventory(1);
+    if (id === 'directory') loadDirectory(1);
     if (id === 'users' && isMaster) loadUsers();
     if (id === 'audit' && isMaster) loadAudit(1);
   }
+
+  // Hamburger menu toggle for mobile
+  const sidebar = document.querySelector('.sidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+  if (sidebarToggle && sidebar && sidebarBackdrop) {
+    sidebarToggle.addEventListener('click', () => {
+      const isOpen = sidebar.classList.toggle('open');
+      sidebarBackdrop.classList.toggle('active', isOpen);
+    });
+    sidebarBackdrop.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      sidebarBackdrop.classList.remove('active');
+    });
+  }
+
+  // Notification Toast Helper
+  function showToast(message, type = 'success', duration = 4000) {
+    let toast = document.getElementById('appToast');
+    if (!toast) {
+      toast = el('div', { id: 'appToast', className: 'app-toast' });
+      document.body.appendChild(toast);
+    }
+    toast.className = `app-toast toast-${type} show`;
+    toast.textContent = message;
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => {
+      toast.className = 'app-toast';
+    }, duration);
+  }
+
+  // Live Database Health Check
+  async function checkHealth() {
+    const dot = document.getElementById('statusDot');
+    const title = document.getElementById('statusTitle');
+    const sub = document.getElementById('statusSubtitle');
+    if (!title || !sub) return;
+
+    try {
+      const res = await apiFetch('api/health.php');
+      const data = await res.json();
+      if (res.ok && data.status === 'ok') {
+        if (dot) dot.className = 'online';
+        title.textContent = data.message || 'Database Connected';
+        sub.textContent = `Internal network · ${data.time}`;
+      } else {
+        if (dot) dot.className = 'offline';
+        title.textContent = data.message || 'Database Disconnected';
+        sub.textContent = 'Service Degraded';
+      }
+    } catch {
+      if (dot) dot.className = 'offline';
+      title.textContent = 'Service Degraded';
+      sub.textContent = 'Connection Error';
+    }
+  }
+  checkHealth();
 
   document.querySelectorAll('[data-view]').forEach(btn => {
     btn.addEventListener('click', () => showView(btn.dataset.view));
@@ -138,16 +197,20 @@
   // IT INVENTORY LOGIC
   // ==========================================
   let invPage = 1;
-  const invSearch = document.getElementById('inventorySearch');
+  const globalSearch = document.getElementById('globalSearch');
   const invCat = document.getElementById('inventoryCategoryFilter');
   const invStat = document.getElementById('inventoryStatusFilter');
   const invExportBtn = document.getElementById('inventoryExportBtn');
+
+  function getSearchQuery() {
+    return globalSearch ? globalSearch.value.trim() : '';
+  }
 
   function updateInvExportUrl() {
     if (!invExportBtn) return;
     const q = new URLSearchParams({
       type: 'inventory',
-      search: invSearch ? invSearch.value.trim() : '',
+      search: getSearchQuery(),
       category: invCat ? invCat.value : '',
       status: invStat ? invStat.value : '',
     });
@@ -165,7 +228,7 @@
       type: 'inventory',
       page: String(page),
       limit: '25',
-      search: invSearch ? invSearch.value.trim() : '',
+      search: getSearchQuery(),
       category: invCat ? invCat.value : '',
       status: invStat ? invStat.value : '',
     });
@@ -176,7 +239,34 @@
       tbody.innerHTML = '';
 
       if (!data.rows || !data.rows.length) {
-        tbody.appendChild(el('tr', {}, el('td', { colSpan: isMaster ? 10 : 9, className: 'empty', textContent: 'No matching inventory records found.' })));
+        const isFiltering = Boolean(getSearchQuery() || (invCat && invCat.value) || (invStat && invStat.value));
+        const emptyTd = el('td', { colSpan: isMaster ? 10 : 9, className: 'empty' });
+        const wrap = el('div', { className: 'empty-state-wrap' });
+        if (isFiltering) {
+          wrap.appendChild(el('p', { className: 'empty-title', textContent: 'No matching inventory records found.' }));
+          wrap.appendChild(el('p', { className: 'empty-desc', textContent: 'Try adjusting your search query or filters.' }));
+        } else {
+          wrap.appendChild(el('p', { className: 'empty-title', textContent: 'No assets yet' }));
+          if (isMaster) {
+            wrap.appendChild(el('p', { className: 'empty-desc', textContent: 'Get started by creating your first IT asset record.' }));
+            const addBtn = el('button', { type: 'button', className: 'btn btn-primary btn-sm', textContent: '+ Add inventory' });
+            addBtn.addEventListener('click', () => {
+              const form = document.getElementById('inventoryForm');
+              if (form) {
+                form.reset();
+                document.getElementById('inventoryFormAction').value = 'create';
+                document.getElementById('inventoryFormId').value = '';
+                document.getElementById('inventoryModalTitle').textContent = 'Add Inventory Record';
+              }
+              openModal('inventoryModal');
+            });
+            wrap.appendChild(addBtn);
+          } else {
+            wrap.appendChild(el('p', { className: 'empty-desc', textContent: 'No equipment recorded in inventory.' }));
+          }
+        }
+        emptyTd.appendChild(wrap);
+        tbody.appendChild(el('tr', {}, emptyTd));
         renderPagination('inventoryPagination', 0, 1, 1, loadInventory);
         return;
       }
@@ -208,7 +298,7 @@
         tr.appendChild(ipCell);
 
         const statusClass = (row.status === 'Assigned') ? 'assigned'
-          : (row.status === 'Under Repair') ? 'repair'
+          : (row.status === 'Under Repair') ? 'under-repair'
           : (row.status === 'Retired') ? 'retired' : 'available';
         tr.appendChild(el('td', {}, el('span', { className: `status ${statusClass}`, textContent: row.status || '' })));
 
@@ -275,10 +365,6 @@
     });
   }
 
-  if (invSearch) {
-    invSearch.addEventListener('input', () => filterTableRows('inventoryTable', invSearch.value));
-    invSearch.addEventListener('input', debounce(() => loadInventory(1), 300));
-  }
   if (invCat) invCat.addEventListener('change', () => loadInventory(1));
   if (invStat) invStat.addEventListener('change', () => loadInventory(1));
 
@@ -286,7 +372,6 @@
   // IP DIRECTORY LOGIC
   // ==========================================
   let ipPage = 1;
-  const ipSearch = document.getElementById('ipSearch');
   const ipTypeFilter = document.getElementById('ipDeviceTypeFilter');
   const ipAdFilter = document.getElementById('ipAdStatusFilter');
   const ipExportBtn = document.getElementById('ipExportBtn');
@@ -295,7 +380,7 @@
     if (!ipExportBtn) return;
     const q = new URLSearchParams({
       type: 'ip',
-      search: ipSearch ? ipSearch.value.trim() : '',
+      search: getSearchQuery(),
       device_type: ipTypeFilter ? ipTypeFilter.value : '',
       ad_status: ipAdFilter ? ipAdFilter.value : '',
     });
@@ -313,7 +398,7 @@
       type: 'directory',
       page: String(page),
       limit: '25',
-      search: ipSearch ? ipSearch.value.trim() : '',
+      search: getSearchQuery(),
       device_type: ipTypeFilter ? ipTypeFilter.value : '',
       ad_status: ipAdFilter ? ipAdFilter.value : '',
     });
@@ -324,7 +409,34 @@
       tbody.innerHTML = '';
 
       if (!data.rows || !data.rows.length) {
-        tbody.appendChild(el('tr', {}, el('td', { colSpan: isMaster ? 9 : 8, className: 'empty', textContent: 'No matching IP records found.' })));
+        const isFiltering = Boolean(getSearchQuery() || (ipTypeFilter && ipTypeFilter.value) || (ipAdFilter && ipAdFilter.value));
+        const emptyTd = el('td', { colSpan: isMaster ? 9 : 8, className: 'empty' });
+        const wrap = el('div', { className: 'empty-state-wrap' });
+        if (isFiltering) {
+          wrap.appendChild(el('p', { className: 'empty-title', textContent: 'No matching IP records found.' }));
+          wrap.appendChild(el('p', { className: 'empty-desc', textContent: 'Try adjusting your search query or filters.' }));
+        } else {
+          wrap.appendChild(el('p', { className: 'empty-title', textContent: 'No IP records yet' }));
+          if (isMaster) {
+            wrap.appendChild(el('p', { className: 'empty-desc', textContent: 'Allocate your first IP address or import records via CSV.' }));
+            const addBtn = el('button', { type: 'button', className: 'btn btn-primary btn-sm', textContent: '+ Add IP record' });
+            addBtn.addEventListener('click', () => {
+              const form = document.getElementById('ipForm');
+              if (form) {
+                form.reset();
+                document.getElementById('ipFormAction').value = 'create';
+                document.getElementById('ipFormId').value = '';
+                document.getElementById('ipModalTitle').textContent = 'Add IP Record';
+              }
+              openModal('ipModal');
+            });
+            wrap.appendChild(addBtn);
+          } else {
+            wrap.appendChild(el('p', { className: 'empty-desc', textContent: 'No network allocations in the IP directory.' }));
+          }
+        }
+        emptyTd.appendChild(wrap);
+        tbody.appendChild(el('tr', {}, emptyTd));
         renderPagination('ipPagination', 0, 1, 1, loadDirectory);
         return;
       }
@@ -335,7 +447,7 @@
         tr.appendChild(el('td', { textContent: row.hostname || '' }));
         tr.appendChild(el('td', { textContent: row.device_type || '' }));
 
-        const adClass = (row.ad_status === 'AD Registered') ? 'assigned' : 'repair';
+        const adClass = (row.ad_status === 'AD Registered') ? 'ad-registered' : 'non-ad';
         tr.appendChild(el('td', {}, el('span', { className: `status ${adClass}`, textContent: row.ad_status || '' })));
         tr.appendChild(el('td', { textContent: row.mac_address || '—' }));
         tr.appendChild(el('td', { textContent: row.department || '—' }));
@@ -392,32 +504,31 @@
     openModal('ipModal');
   }
 
-  if (ipSearch) {
-    ipSearch.addEventListener('input', () => filterTableRows('ipTable', ipSearch.value));
-    ipSearch.addEventListener('input', debounce(() => loadDirectory(1), 300));
-  }
   if (ipTypeFilter) ipTypeFilter.addEventListener('change', () => loadDirectory(1));
   if (ipAdFilter) ipAdFilter.addEventListener('change', () => loadDirectory(1));
 
-  // Global search
-  const globalSearch = document.getElementById('globalSearch');
+  // Global search input handling
   if (globalSearch) {
     globalSearch.addEventListener('input', () => {
-      const val = globalSearch.value;
+      const q = globalSearch.value;
       const activeView = document.querySelector('.view.active')?.id;
       if (activeView === 'directory') {
-        if (ipSearch) ipSearch.value = val;
-        filterTableRows('ipTable', val);
-      } else {
-        if (activeView === 'dashboard') showView('inventory');
-        if (invSearch) invSearch.value = val;
-        filterTableRows('inventoryTable', val);
+        filterTableRows('ipTable', q);
+      } else if (activeView === 'inventory') {
+        filterTableRows('inventoryTable', q);
+      } else if (activeView === 'dashboard') {
+        showView('inventory');
+        filterTableRows('inventoryTable', q);
       }
     });
+
     globalSearch.addEventListener('input', debounce(() => {
       const activeView = document.querySelector('.view.active')?.id;
-      if (activeView === 'directory') loadDirectory(1);
-      else loadInventory(1);
+      if (activeView === 'directory') {
+        loadDirectory(1);
+      } else {
+        loadInventory(1);
+      }
     }, 300));
   }
 
@@ -425,7 +536,8 @@
   // DELETE HANDLER (BY ID ONLY)
   // ==========================================
   async function deleteRecord(type, id, key) {
-    if (!confirm(`Are you sure you want to permanently delete ${key}? This action will be audited.`)) return;
+    const itemLabel = (type === 'inventory') ? `inventory asset '${key}'` : `IP record '${key}'`;
+    if (!confirm(`Are you sure you want to permanently delete ${itemLabel}? This action will be audited and cannot be undone.`)) return;
 
     const form = new FormData();
     form.append('action', 'delete');
@@ -437,13 +549,14 @@
       const res = await apiFetch(endpoint, { method: 'POST', body: form });
       const data = await res.json();
       if (res.ok && data.success) {
+        showToast(`Deleted ${itemLabel} successfully.`, 'success');
         if (type === 'inventory') loadInventory(invPage);
         else loadDirectory(ipPage);
       } else {
-        alert(data.error || 'Failed to delete record.');
+        showToast(data.error || 'Failed to delete record.', 'error');
       }
     } catch (err) {
-      alert('Network or server error during delete.');
+      showToast('Network or server error during delete.', 'error');
     }
   }
 
@@ -464,6 +577,7 @@
         if (res.ok && data.success) {
           form.reset();
           closeModal(form.closest('.modal'));
+          showToast(data.message || 'Record saved successfully.', 'success');
           onSuccess(data);
         } else {
           if (msg) {
@@ -475,7 +589,7 @@
       } catch (err) {
         if (msg) {
           msg.className = 'alert alert-error';
-          msg.textContent = 'Server connection error.';
+          msg.textContent = err.message || 'Server connection error.';
           msg.style.display = 'block';
         }
       }
@@ -501,7 +615,7 @@
         const res = await apiFetch(importForm.action, { method: 'POST', body: new FormData(importForm) });
         const data = await res.json();
         if (res.ok && data.success) {
-          alert(data.message);
+          showToast(data.message || 'Import completed.', 'success', 6000);
           importForm.reset();
           closeModal(importForm.closest('.modal'));
           loadInventory(1);
@@ -572,8 +686,12 @@
           fd.append('csrf', csrfToken);
           const r = await apiFetch('api/users.php', { method: 'POST', body: fd });
           const d = await r.json();
-          if (r.ok && d.success) loadUsers();
-          else alert(d.error || 'Failed to update account status.');
+          if (r.ok && d.success) {
+            showToast('Account status updated.', 'success');
+            loadUsers();
+          } else {
+            showToast(d.error || 'Failed to update account status.', 'error');
+          }
         });
         actionTd.appendChild(toggleBtn);
 
@@ -593,8 +711,12 @@
           fd.append('csrf', csrfToken);
           const r = await apiFetch('api/users.php', { method: 'POST', body: fd });
           const d = await r.json();
-          if (r.ok && d.success) loadUsers();
-          else alert(d.error || 'Failed to update user role.');
+          if (r.ok && d.success) {
+            showToast(`Role updated to ${newRole}.`, 'success');
+            loadUsers();
+          } else {
+            showToast(d.error || 'Failed to update user role.', 'error');
+          }
         });
         actionTd.appendChild(roleBtn);
 
@@ -632,6 +754,7 @@
         const res = await apiFetch('api/users.php', { method: 'POST', body: fd });
         const data = await res.json();
         if (res.ok && data.success) {
+          showToast(`Account '${fd.get('username')}' created successfully.`, 'success');
           userCreateForm.reset();
           closeModal(userCreateForm.closest('.modal'));
           loadUsers();
@@ -665,7 +788,7 @@
         const res = await apiFetch('api/users.php', { method: 'POST', body: fd });
         const data = await res.json();
         if (res.ok && data.success) {
-          alert('Temporary password set. User will be forced to change it on next login.');
+          showToast('Temporary password set. User will be forced to change it on next login.', 'success', 5000);
           userResetForm.reset();
           closeModal(userResetForm.closest('.modal'));
           loadUsers();
@@ -803,6 +926,9 @@
             msg.className = 'alert alert-success';
             msg.textContent = data.message;
             pwForm.reset();
+            const reminder = document.querySelector('.security-reminder');
+            if (reminder) reminder.remove();
+            showToast('Password updated successfully.', 'success');
           } else {
             msg.className = 'alert alert-error';
             msg.textContent = data.error || 'Failed to update password.';
@@ -812,7 +938,7 @@
         if (msg) {
           msg.style.display = 'block';
           msg.className = 'alert alert-error';
-          msg.textContent = 'Server connection error.';
+          msg.textContent = err.message || 'Server connection error.';
         }
       }
     });
@@ -835,6 +961,9 @@
             msg.className = 'alert alert-success';
             msg.textContent = data.message;
             pwModalForm.reset();
+            const reminder = document.querySelector('.security-reminder');
+            if (reminder) reminder.remove();
+            showToast('Password updated successfully.', 'success');
             setTimeout(() => closeModal(pwModalForm.closest('.modal')), 1200);
           } else {
             msg.className = 'alert alert-error';
@@ -845,10 +974,56 @@
         if (msg) {
           msg.style.display = 'block';
           msg.className = 'alert alert-error';
-          msg.textContent = 'Server connection error.';
+          msg.textContent = err.message || 'Server connection error.';
         }
       }
     });
+  }
+
+  // Inline format validation for IP and MAC fields
+  const IPV4_REGEX = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$/;
+  const MAC_REGEX = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+
+  function validateIpInput(input, required = false) {
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) {
+      input.setCustomValidity(required ? 'IP address is required.' : '');
+    } else if (!IPV4_REGEX.test(val)) {
+      input.setCustomValidity('Enter a valid IPv4 address (e.g. 192.168.1.10)');
+    } else {
+      input.setCustomValidity('');
+    }
+  }
+
+  function validateMacInput(input) {
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) {
+      input.setCustomValidity('');
+    } else if (!MAC_REGEX.test(val)) {
+      input.setCustomValidity('Enter a valid MAC address (e.g. 00:1A:2B:3C:4D:5E)');
+    } else {
+      input.setCustomValidity('');
+    }
+  }
+
+  const ipValInput = document.getElementById('ip_address_val');
+  if (ipValInput) {
+    ipValInput.addEventListener('input', () => validateIpInput(ipValInput, true));
+    ipValInput.addEventListener('blur', () => validateIpInput(ipValInput, true));
+  }
+
+  const invIpInput = document.getElementById('inv_ip_address');
+  if (invIpInput) {
+    invIpInput.addEventListener('input', () => validateIpInput(invIpInput, false));
+    invIpInput.addEventListener('blur', () => validateIpInput(invIpInput, false));
+  }
+
+  const macValInput = document.getElementById('ip_mac_val');
+  if (macValInput) {
+    macValInput.addEventListener('input', () => validateMacInput(macValInput));
+    macValInput.addEventListener('blur', () => validateMacInput(macValInput));
   }
 
   // Initial table data loads

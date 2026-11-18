@@ -7,6 +7,7 @@ if (!file_exists($config_file)) {
     $config_file = __DIR__ . '/../config/config.php';
 }
 $config = require $config_file;
+date_default_timezone_set($config['timezone'] ?? 'Asia/Kolkata');
 
 // Session configuration and lifetime controls
 if (session_status() === PHP_SESSION_NONE) {
