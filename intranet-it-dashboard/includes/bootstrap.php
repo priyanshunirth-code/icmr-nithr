@@ -41,82 +41,6 @@ if (isset($_SESSION['user'])) {
     }
 }
 
-$local_demo = ($config['demo_mode'] ?? false) === true
-    && ($config['app_env'] ?? 'production') !== 'production'
-    && in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true);
-
-function init_sqlite_tables(PDO $db): void {
-    $db->exec("
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'User',
-            is_active INTEGER NOT NULL DEFAULT 1,
-            last_login_at DATETIME DEFAULT NULL,
-            must_change_password INTEGER NOT NULL DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS login_attempts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            ip TEXT NOT NULL,
-            attempted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            success INTEGER NOT NULL DEFAULT 0
-        );
-        CREATE TABLE IF NOT EXISTS audit_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER DEFAULT NULL,
-            username TEXT NOT NULL,
-            action TEXT NOT NULL,
-            entity TEXT NOT NULL,
-            entity_id TEXT DEFAULT NULL,
-            details TEXT DEFAULT NULL,
-            ip TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS it_inventory (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            asset_id TEXT NOT NULL UNIQUE,
-            device_name TEXT NOT NULL,
-            category TEXT NOT NULL,
-            brand TEXT,
-            model TEXT,
-            serial_number TEXT,
-            assigned_to TEXT,
-            department TEXT,
-            location TEXT,
-            ip_address TEXT,
-            status TEXT NOT NULL DEFAULT 'Available',
-            remarks TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS ip_directory (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ip_address TEXT NOT NULL UNIQUE,
-            hostname TEXT NOT NULL,
-            mac_address TEXT,
-            device_type TEXT NOT NULL,
-            ad_status TEXT NOT NULL DEFAULT 'Non-AD',
-            department TEXT,
-            location TEXT,
-            device_status TEXT NOT NULL DEFAULT 'Unknown',
-            remarks TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-    ");
-
-    $rand_pass = bin2hex(random_bytes(8));
-    if (php_sapi_name() === 'cli') {
-        fwrite(STDERR, "[Demo Mode] Generated initial Master account 'master' with password: {$rand_pass}\n");
-    }
-    $master_hash = password_hash($rand_pass, PASSWORD_DEFAULT);
-    $db->prepare("INSERT OR IGNORE INTO users (username, password_hash, role) VALUES ('master', ?, 'Master')")->execute([$master_hash]);
-}
-
 try {
     $pdo = new PDO($config['db']['dsn'], $config['db']['username'], $config['db']['password'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -125,32 +49,13 @@ try {
     ]);
     $pdo->exec("SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION'");
 } catch (PDOException $exception) {
-    if (!$local_demo) {
-        error_log('Database connection failure: ' . $exception->getMessage());
-        http_response_code(503);
-        echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>503 Service Unavailable</title></head>';
-        echo '<body style="font-family:sans-serif;text-align:center;padding:50px;">';
-        echo '<h2>Service Temporarily Unavailable</h2><p>Please contact internal IT support if this persists.</p>';
-        echo '</body></html>';
-        exit;
-    }
-
-    $data_dir = getenv('IT_PORTAL_DATA') ?: '/var/www/it-portal-private/data';
-    if (!is_dir($data_dir)) {
-        $data_dir = __DIR__ . '/../data';
-        if (!is_dir($data_dir)) {
-            mkdir($data_dir, 0755, true);
-        }
-    }
-    $sqlite_file = $data_dir . '/dashboard.sqlite';
-    $first_run = !file_exists($sqlite_file);
-    $pdo = new PDO('sqlite:' . $sqlite_file, null, null, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
-    if ($first_run) {
-        init_sqlite_tables($pdo);
-    }
+    error_log('Database connection failure: ' . $exception->getMessage());
+    http_response_code(503);
+    echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>503 Service Unavailable</title></head>';
+    echo '<body style="font-family:sans-serif;text-align:center;padding:50px;">';
+    echo '<h2>Service Temporarily Unavailable</h2><p>Please contact internal IT support if this persists.</p>';
+    echo '</body></html>';
+    exit;
 }
 
 require_once __DIR__ . '/audit.php';
