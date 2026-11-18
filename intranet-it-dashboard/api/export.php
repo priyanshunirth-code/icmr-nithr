@@ -31,9 +31,9 @@ if ($type === 'inventory') {
         $params[] = $status;
     }
     if ($search !== '') {
-        $conditions[] = '(asset_id LIKE ? OR device_name LIKE ? OR serial_number LIKE ? OR assigned_to LIKE ? OR department LIKE ? OR location LIKE ? OR ip_address LIKE ?)';
+        $conditions[] = '(asset_id LIKE ? OR device_name LIKE ? OR brand LIKE ? OR model LIKE ? OR serial_number LIKE ? OR assigned_to LIKE ? OR department LIKE ? OR location LIKE ? OR ip_address LIKE ? OR category LIKE ? OR status LIKE ? OR remarks LIKE ?)';
         $like = '%' . $search . '%';
-        for ($i = 0; $i < 7; $i++) $params[] = $like;
+        for ($i = 0; $i < 12; $i++) $params[] = $like;
     }
 } else {
     $headers = ['ip_address', 'hostname', 'mac_address', 'device_type', 'ad_status', 'department', 'location', 'device_status', 'remarks'];
@@ -49,9 +49,9 @@ if ($type === 'inventory') {
         $params[] = $adStatus;
     }
     if ($search !== '') {
-        $conditions[] = '(ip_address LIKE ? OR hostname LIKE ? OR mac_address LIKE ? OR department LIKE ? OR location LIKE ?)';
+        $conditions[] = '(ip_address LIKE ? OR hostname LIKE ? OR mac_address LIKE ? OR device_type LIKE ? OR ad_status LIKE ? OR department LIKE ? OR location LIKE ? OR device_status LIKE ? OR remarks LIKE ?)';
         $like = '%' . $search . '%';
-        for ($i = 0; $i < 5; $i++) $params[] = $like;
+        for ($i = 0; $i < 9; $i++) $params[] = $like;
     }
 }
 
@@ -63,7 +63,7 @@ header('Cache-Control: no-store, no-cache, must-revalidate');
 
 $out = fopen('php://output', 'w');
 fwrite($out, "\xEF\xBB\xBF");
-fputcsv($out, $headers);
+fputcsv($out, $headers, ',', '"', "\\");
 
 $sql = 'SELECT ' . implode(',', $headers) . ' FROM ' . $table . ' ' . $where . ' ORDER BY id DESC LIMIT 50000';
 $stmt = $pdo->prepare($sql);
@@ -73,7 +73,7 @@ $rowCount = 0;
 while ($row = $stmt->fetch()) {
     $rowCount++;
     $cleanRow = array_map(fn($h) => csv_safe((string)($row[$h] ?? '')), $headers);
-    fputcsv($out, $cleanRow);
+    fputcsv($out, $cleanRow, ',', '"', "\\");
 }
 fclose($out);
 

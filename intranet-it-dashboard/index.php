@@ -99,15 +99,13 @@ if (!$logged_in) {
 }
 
 // Metrics for Dashboard
-$stats = ['assets' => 0, 'ips' => 0, 'ad' => 0, 'non_ad' => 0];
+$stats = ['assets' => 0, 'ips' => 0];
 $recent_assets = [];
 $recent_ips = [];
 
 if ($pdo) {
     $stats['assets'] = (int)$pdo->query('SELECT COUNT(*) FROM it_inventory')->fetchColumn();
     $stats['ips'] = (int)$pdo->query('SELECT COUNT(*) FROM ip_directory')->fetchColumn();
-    $stats['ad'] = (int)$pdo->query("SELECT COUNT(*) FROM ip_directory WHERE ad_status = 'AD Registered'")->fetchColumn();
-    $stats['non_ad'] = (int)$pdo->query("SELECT COUNT(*) FROM ip_directory WHERE ad_status = 'Non-AD'")->fetchColumn();
     $recent_assets = $pdo->query('
         SELECT asset_id, device_name, category, assigned_to, status, updated_at
         FROM it_inventory
@@ -149,20 +147,6 @@ $is_master = can('manage_users');
             <button type="button" class="nav-item" data-view="audit"><span>📋</span>Audit Log</button>
             <?php endif; ?>
         </nav>
-        <div class="sidebar-footer">
-            <button type="button" class="user-profile-btn" data-view="profile" title="View Profile & Settings">
-                <span class="user-avatar"><?= e(strtoupper(substr($user['username'], 0, 1))) ?></span>
-                <div class="user-info">
-                    <strong><?= e($user['username']) ?></strong>
-                    <small><?= e($user['role']) ?></small>
-                </div>
-            </button>
-            <form method="post" action="index.php" style="margin:0;">
-                <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
-                <input type="hidden" name="action" value="logout">
-                <button type="submit" class="logout-link" title="Logout">↪</button>
-            </form>
-        </div>
     </aside>
 
     <main class="main">
@@ -183,54 +167,50 @@ $is_master = can('manage_users');
                     <small>Internal network · <?= date('d M Y, H:i') ?></small>
                 </div>
             </div>
-            <form method="post" action="index.php" class="topbar-logout-form">
-                <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
-                <input type="hidden" name="action" value="logout">
-                <button type="submit" class="btn btn-outline btn-logout">Logout</button>
-            </form>
+            <div class="topbar-user-actions">
+                <div class="topbar-user-badge">
+                    <span class="topbar-avatar"><?= e(strtoupper(substr($user['username'], 0, 1))) ?></span>
+                    <span class="topbar-username"><?= e($user['username']) ?></span>
+                    <span class="user-role-badge status <?= $user['role'] === 'Master' ? 'assigned' : 'available' ?>"><?= e($user['role']) ?></span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" data-modal="passwordModal">Change Password</button>
+                <form method="post" action="index.php" class="topbar-logout-form">
+                    <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                    <input type="hidden" name="action" value="logout">
+                    <button type="submit" class="btn btn-outline btn-logout btn-sm">Logout</button>
+                </form>
+            </div>
         </header>
 
         <?php if (!empty($user['must_change_password'])): ?>
         <div class="alert alert-warning" style="margin:20px 24px 0;">
-            <strong>Security Reminder:</strong> Your account requires a password change. Please <a href="#" data-view-target="profile" style="text-decoration:underline;color:inherit;font-weight:700;">update your password in settings</a>.
+            <strong>Security Reminder:</strong> Your account requires a password change. Please <a href="#" data-modal="passwordModal" style="text-decoration:underline;color:inherit;font-weight:700;">update your password now</a>.
         </div>
         <?php endif; ?>
 
         <!-- DASHBOARD VIEW -->
         <section id="dashboard" class="view active">
-            <div class="page-heading">
-                <div>
-                    <h1>Welcome, <?= e($user['username']) ?></h1>
+            <div class="dashboard-hero-row">
+                <div class="dashboard-user-greeting">
+                    <h1>Welcome, <?= e($user['username']) ?> <span class="user-role-badge status <?= $user['role'] === 'Master' ? 'assigned' : 'available' ?>"><?= e($user['role']) ?></span></h1>
                     <p>Overview of IT assets and IP records at <?= e($config['institution_name']) ?>.</p>
                 </div>
-            </div>
-            <div class="metric-grid">
-                <article class="metric-card">
-                    <span>Total IT Assets</span>
-                    <strong><?= $stats['assets'] ?></strong>
-                    <em class="trend">↗ +12 (2.9%)</em>
-                    <small>vs. previous 30 days</small>
-                    <div class="sparkline blue"></div>
-                </article>
-                <article class="metric-card">
-                    <span>Total IP Records</span>
-                    <strong><?= $stats['ips'] ?></strong>
-                    <em class="trend">↗ +18 (3.6%)</em>
-                    <small>vs. previous 30 days</small>
-                    <div class="sparkline blue"></div>
-                </article>
-                <article class="metric-card">
-                    <span>AD-Registered</span>
-                    <strong><?= $stats['ad'] ?></strong>
-                    <small><?= $stats['ips'] ? round($stats['ad'] / $stats['ips'] * 100, 1) : 0 ?>% of records</small>
-                    <div class="bars mint"><i></i><i></i><i></i><i></i><i></i></div>
-                </article>
-                <article class="metric-card">
-                    <span>Non-AD</span>
-                    <strong><?= $stats['non_ad'] ?></strong>
-                    <small><?= $stats['ips'] ? round($stats['non_ad'] / $stats['ips'] * 100, 1) : 0 ?>% of records</small>
-                    <div class="bars amber"><i></i><i></i><i></i><i></i><i></i></div>
-                </article>
+                <div class="metric-cards-right">
+                    <article class="metric-card">
+                        <span>Total IT Assets</span>
+                        <strong><?= $stats['assets'] ?></strong>
+                        <em class="trend">↗ +12 (2.9%)</em>
+                        <small>vs. previous 30 days</small>
+                        <div class="sparkline blue"></div>
+                    </article>
+                    <article class="metric-card">
+                        <span>Total IP Records</span>
+                        <strong><?= $stats['ips'] ?></strong>
+                        <em class="trend">↗ +18 (3.6%)</em>
+                        <small>vs. previous 30 days</small>
+                        <div class="sparkline blue"></div>
+                    </article>
+                </div>
             </div>
             <div class="dashboard-tables">
                 <article class="panel">
@@ -735,6 +715,26 @@ $is_master = can('manage_users');
     </div>
 </div>
 <?php endif; ?>
+
+<!-- CHANGE PASSWORD MODAL (ALL ROLES) -->
+<div id="passwordModal" class="modal">
+    <div class="modal-card">
+        <div class="modal-heading">
+            <h2>Change Password</h2>
+            <button type="button" class="modal-close">×</button>
+        </div>
+        <form id="passwordModalForm" method="post" action="api/profile.php">
+            <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+            <div style="display:grid;gap:14px;">
+                <label>Current Password*<input type="password" name="current_password" required autocomplete="current-password"></label>
+                <label>New Password (min 10 characters)*<input type="password" name="new_password" required minlength="10" autocomplete="new-password"></label>
+                <label>Confirm New Password*<input type="password" name="confirm_password" required minlength="10" autocomplete="new-password"></label>
+                <div id="passwordModalMsg" style="display:none;" class="alert"></div>
+                <button class="btn btn-primary btn-block" type="submit">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script src="assets/js/app.js"></script>
 </body>

@@ -260,7 +260,25 @@
     openModal('inventoryModal');
   }
 
-  if (invSearch) invSearch.addEventListener('input', debounce(() => loadInventory(1), 300));
+  function filterTableRows(tableId, query) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const q = (query || '').toLowerCase().trim();
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      if (row.querySelector('.empty')) return;
+      if (!q) {
+        row.style.display = '';
+        return;
+      }
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  if (invSearch) {
+    invSearch.addEventListener('input', () => filterTableRows('inventoryTable', invSearch.value));
+    invSearch.addEventListener('input', debounce(() => loadInventory(1), 300));
+  }
   if (invCat) invCat.addEventListener('change', () => loadInventory(1));
   if (invStat) invStat.addEventListener('change', () => loadInventory(1));
 
@@ -374,22 +392,33 @@
     openModal('ipModal');
   }
 
-  if (ipSearch) ipSearch.addEventListener('input', debounce(() => loadDirectory(1), 300));
+  if (ipSearch) {
+    ipSearch.addEventListener('input', () => filterTableRows('ipTable', ipSearch.value));
+    ipSearch.addEventListener('input', debounce(() => loadDirectory(1), 300));
+  }
   if (ipTypeFilter) ipTypeFilter.addEventListener('change', () => loadDirectory(1));
   if (ipAdFilter) ipAdFilter.addEventListener('change', () => loadDirectory(1));
 
-  // Global search shortcut
+  // Global search
   const globalSearch = document.getElementById('globalSearch');
   if (globalSearch) {
-    globalSearch.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const val = globalSearch.value.trim();
-        if (invSearch) invSearch.value = val;
+    globalSearch.addEventListener('input', () => {
+      const val = globalSearch.value;
+      const activeView = document.querySelector('.view.active')?.id;
+      if (activeView === 'directory') {
         if (ipSearch) ipSearch.value = val;
-        showView('inventory');
-        loadInventory(1);
+        filterTableRows('ipTable', val);
+      } else {
+        if (activeView === 'dashboard') showView('inventory');
+        if (invSearch) invSearch.value = val;
+        filterTableRows('inventoryTable', val);
       }
     });
+    globalSearch.addEventListener('input', debounce(() => {
+      const activeView = document.querySelector('.view.active')?.id;
+      if (activeView === 'directory') loadDirectory(1);
+      else loadInventory(1);
+    }, 300));
   }
 
   // ==========================================
@@ -774,6 +803,39 @@
             msg.className = 'alert alert-success';
             msg.textContent = data.message;
             pwForm.reset();
+          } else {
+            msg.className = 'alert alert-error';
+            msg.textContent = data.error || 'Failed to update password.';
+          }
+        }
+      } catch (err) {
+        if (msg) {
+          msg.style.display = 'block';
+          msg.className = 'alert alert-error';
+          msg.textContent = 'Server connection error.';
+        }
+      }
+    });
+  }
+
+  // Topbar Change Password Modal Form
+  const pwModalForm = document.getElementById('passwordModalForm');
+  if (pwModalForm) {
+    pwModalForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('passwordModalMsg');
+      if (msg) msg.style.display = 'none';
+
+      try {
+        const res = await apiFetch(pwModalForm.action, { method: 'POST', body: new FormData(pwModalForm) });
+        const data = await res.json();
+        if (msg) {
+          msg.style.display = 'block';
+          if (res.ok && data.success) {
+            msg.className = 'alert alert-success';
+            msg.textContent = data.message;
+            pwModalForm.reset();
+            setTimeout(() => closeModal(pwModalForm.closest('.modal')), 1200);
           } else {
             msg.className = 'alert alert-error';
             msg.textContent = data.error || 'Failed to update password.';

@@ -39,7 +39,7 @@ $firstLine = strip_utf8_bom($firstLine);
 $delimiter = detect_csv_delimiter($firstLine);
 rewind($handle);
 
-$rawHeaders = fgetcsv($handle, 0, $delimiter);
+$rawHeaders = fgetcsv($handle, 0, $delimiter, '"', "\\");
 if (!$rawHeaders) {
     fclose($handle);
     json_response(['error' => 'Invalid CSV headers'], 422);
@@ -72,7 +72,7 @@ try {
             WHERE asset_id = ?
         ');
 
-        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+        while (($row = fgetcsv($handle, 0, $delimiter, '"', "\\")) !== false) {
             $lineNumber++;
             if ($lineNumber > 5001) {
                 $invalid[] = ['line' => $lineNumber, 'reason' => 'Maximum limit of 5,000 rows reached'];
@@ -136,7 +136,7 @@ try {
             WHERE ip_address = ?
         ');
 
-        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+        while (($row = fgetcsv($handle, 0, $delimiter, '"', "\\")) !== false) {
             $lineNumber++;
             if ($lineNumber > 5001) {
                 $invalid[] = ['line' => $lineNumber, 'reason' => 'Maximum limit of 5,000 rows reached'];

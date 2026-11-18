@@ -38,9 +38,9 @@ if ($type === 'inventory') {
         $params[] = $status;
     }
     if ($search !== '') {
-        $conditions[] = '(asset_id LIKE ? OR device_name LIKE ? OR brand LIKE ? OR model LIKE ? OR serial_number LIKE ? OR assigned_to LIKE ? OR department LIKE ? OR location LIKE ? OR ip_address LIKE ? OR remarks LIKE ?)';
+        $conditions[] = '(asset_id LIKE ? OR device_name LIKE ? OR brand LIKE ? OR model LIKE ? OR serial_number LIKE ? OR assigned_to LIKE ? OR department LIKE ? OR location LIKE ? OR ip_address LIKE ? OR category LIKE ? OR status LIKE ? OR remarks LIKE ?)';
         $like = '%' . $search . '%';
-        for ($i = 0; $i < 10; $i++) $params[] = $like;
+        for ($i = 0; $i < 12; $i++) $params[] = $like;
     }
 
     $where = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
@@ -76,9 +76,9 @@ if ($type === 'inventory') {
         $params[] = $adStatus;
     }
     if ($search !== '') {
-        $conditions[] = '(ip_address LIKE ? OR hostname LIKE ? OR mac_address LIKE ? OR department LIKE ? OR location LIKE ? OR remarks LIKE ?)';
+        $conditions[] = '(ip_address LIKE ? OR hostname LIKE ? OR mac_address LIKE ? OR device_type LIKE ? OR ad_status LIKE ? OR department LIKE ? OR location LIKE ? OR device_status LIKE ? OR remarks LIKE ?)';
         $like = '%' . $search . '%';
-        for ($i = 0; $i < 6; $i++) $params[] = $like;
+        for ($i = 0; $i < 9; $i++) $params[] = $like;
     }
 
     $where = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';

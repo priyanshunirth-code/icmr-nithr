@@ -53,7 +53,16 @@ function validate_csv_upload(array $file): string {
 
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = (string)$finfo->file($tmpName);
-    $validMimes = ['text/plain', 'text/csv', 'application/csv', 'text/x-csv', 'application/vnd.ms-excel'];
+    $validMimes = [
+        'text/plain',
+        'text/csv',
+        'application/csv',
+        'text/x-csv',
+        'application/vnd.ms-excel',
+        'application/octet-stream',
+        'text/x-comma-separated-values',
+        'application/vnd.csv',
+    ];
     if (!in_array($mime, $validMimes, true)) {
         throw new InvalidArgumentException('Invalid file content type: ' . $mime);
     }
