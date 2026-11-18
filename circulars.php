@@ -73,6 +73,14 @@ include("language.php");
                                         </thead>
                                         <tbody>
                                             <tr>
+                                                <td style="font-size: 20px;" class="sn"></td>
+                                                <td style="font-size: 20px; text-align: left; padding-left: 20px;">
+                                                    New Doc 11-04-2026 10.57
+                                                    <img src="new.gif" alt="New" style="margin-left: 8px; vertical-align: middle;"/>
+                                                </td>
+                                                <td style="text-align: left; padding-left: 20px;"><a href="/New%20Doc%2011-04-2026%2010.57.pdf" target="_blank" class="cs-btn small cs-bgcolor"><i class="icon-uniF129"></i> Download</a></td>
+                                            </tr>
+                                            <tr>
 											    <td style="font-size: 20px;" class="sn"></td>
 												<td style="font-size: 20px; text-align: left; padding-left: 20px;">Office Order for Compliance and Implementation of Official Language Policy </td>
                                                 <td style=" text-align: left; padding-left: 20px;"><a href="/employees_corner/2026/Circular-416.pdf" target="_blank" class="cs-btn small cs-bgcolor"><i class="icon-uniF129"></i> Download</a></td>

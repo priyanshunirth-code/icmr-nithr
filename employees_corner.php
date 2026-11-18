@@ -56,7 +56,7 @@ include("config.php");
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        /* 🌟 GLOBAL */
+        /* GLOBAL */
         body {
             background: #f4f7f6;
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -64,13 +64,13 @@ include("config.php");
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 📦 SECTION */
+        /* SECTION */
         .v-section {
             margin-top: 30px;
             margin-bottom: 30px;
         }
 
-        /* 🧾 HEADINGS */
+        /*  HEADINGS */
         .v-section h2 {
             font-size: 18px;
             padding: 12px 16px;
@@ -88,7 +88,7 @@ include("config.php");
             border-left-color: #3b82f6;
         }
 
-        /* 📊 RESPONSIVE WRAPPER */
+        /* RESPONSIVE WRAPPER */
         .table-responsive {
             overflow-x: auto;
             background: #ffffff;
@@ -97,7 +97,7 @@ include("config.php");
             border: 1px solid #e2e8f0;
         }
 
-        /* 📊 TABLE */
+        /* TABLE */
         .v-table {
             width: 100%;
             border-collapse: collapse;
@@ -133,7 +133,7 @@ include("config.php");
             border-bottom: none;
         }
 
-        /* 🔥 FORM TITLE (important highlight) */
+        /* ßFORM TITLE (important highlight) */
         .v-table td:nth-child(2) {
             font-size: 17px;
             font-weight: 600;
@@ -153,7 +153,7 @@ include("config.php");
             align-items: center;
         }
 
-        /* 🔘 BUTTON BASE */
+        /* BUTTON BASE */
         .v-btn {
             display: inline-flex;
             align-items: center;
@@ -167,7 +167,7 @@ include("config.php");
             transition: all 0.2s ease-in-out;
         }
 
-        /* 🔵 Employee Buttons */
+        /* Employee Buttons */
         .v-employee .v-btn {
             background: #eff6ff;
             color: #1d4ed8 !important;
@@ -228,6 +228,19 @@ include("config.php");
                                 </thead>
                                 <tbody>
                                     <?php $sno = 1; ?>
+
+                                    <tr>
+                                        <td><?php echo $sno++; ?></td>
+                                        <td>
+                                            Circular regarding the submission of "Life Certificate" (November 2026) for Institute Pensioners/Family Pensioners
+                                            <img src="new.gif" alt="New" style="margin-left: 8px; vertical-align: middle;"/>
+                                        </td>
+                                        <td>
+                                            <a href="/Life_Certificate_for_November_2026.pdf" target="_blank" class="v-btn">
+                                                <?php echo $lang['download']; ?>
+                                            </a>
+                                        </td>
+                                    </tr>
 
                                     <tr>
                                         <td><?php echo $sno++; ?></td>

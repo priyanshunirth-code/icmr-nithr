@@ -140,6 +140,16 @@ include("config.php");
                         <table class="news-table">
 
                             <tr>
+                                <td class="news-text-cell">A special health camp for sickle cell patients was organized at Tamiya on the occasion of Birsa Munda Jayanti. Patients and their families received medical examinations, treatment advice, and medicines.</td>
+                                <td class="news-gallery-cell">
+                                    <figure>
+                                        <a href="assets/images/Tamiya2026_1.jpeg" data-lightbox="sickle-cell-camp"><img src="assets/images/Tamiya2026_1.jpeg" alt="Sickle cell health camp at Tamiya" width="200"></a>
+                                        <a href="assets/images/Tamiya2026_2.jpeg" data-lightbox="sickle-cell-camp"><img src="assets/images/Tamiya2026_2.jpeg" alt="Sickle cell health camp at Tamiya" width="200"></a>
+                                    </figure>
+                                </td>
+                            </tr>
+
+                            <tr>
                                 <td class="news-text-cell"><?php echo $lang['news_22']; ?></td>
                                 <td class="news-gallery-cell" style="width:450px;">
                                     <figure>

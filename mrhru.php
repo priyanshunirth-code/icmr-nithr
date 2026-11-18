@@ -1,29 +1,105 @@
 <?php
 session_start();
 include("language.php");
-include("config.php");
 
 $mrhruUnits = [
     [
-        "id" => "unit-one",
-        "name" => "MRHRU Unit I",
-        "partner" => "Partner institution details to be added",
-        "projects" => [
-            ["title" => "Project I", "person" => "Person I", "status" => "Details to be updated"],
-            ["title" => "Project II", "person" => "Person II", "status" => "Details to be updated"],
+        "id" => "mrhru-jheet",
+        "name" => "MRHRU Jheet (C.G.)",
+        "fullName" => "Model Rural Health Research Unit (MRHRU), Jheet",
+        "location" => "CHC Jheet, Patan Block, Durg District, Chhattisgarh",
+        "authority" => "Department of Health Research (DHR)",
+        "authorityDesc" => "Ministry of Health & Family Welfare, Govt. of India",
+        "mentor" => "ICMR-NITHR, Jabalpur, M.P.",
+        "mentorDesc" => "Mentoring Institute (National Institute for Tribal Health Research)",
+        "partner" => "Pt. J.N.M. Medical College, Raipur",
+        "partnerDesc" => "Linked Government Medical College",
+        "lracStatus" => "Constituted: 25-04-2023 | Last Meeting: 20-08-2024",
+        "profile" => "MRHRU Jheet is established under the Department of Health Research (DHR) Umbrella Scheme at the Community Health Centre (CHC) Jheet, Patan Block, Durg District, Chhattisgarh. In partnership with Pt. Jawahar Lal Nehru Memorial Medical College, Raipur and mentored by ICMR-NITHR Jabalpur, the unit operates as a vital rural research platform bridging tertiary medical sciences and grassroots community healthcare.",
+        "objectives" => [
+            "Strengthen local capacity and infrastructure for population-based health research.",
+            "Establish an interface between medical researchers, state health administration, and rural communities.",
+            "Undertake clinical, epidemiological, and implementation research on regional priorities including Sickle Cell Disease, CKDu, and Non-Communicable Diseases (NCDs).",
+            "Carry out Population-Based Health Surveys (PBHS) and multi-centric cohort studies across rural Chhattisgarh."
         ],
-        "people" => ["Person I", "Person II", "Person III"],
+        "projects" => [
+            ["title" => "Prevalence and Associated Factors of Suspected CKDu in Supebeda", "person" => "MRHRU & ICMR-NITHR Team", "status" => "Completed / Published"],
+            ["title" => "Continuum of Care after Newborn Screening for Sickle Cell Disease", "person" => "MRHRU & ICMR-NITHR Team", "status" => "Completed / Published"],
+            ["title" => "Socio-Demographic & Dietary Correlates of Metabolic Syndrome in Tribal & Rural Populations", "person" => "MRHRU & ICMR-NITHR Team", "status" => "Completed / Published"],
+            ["title" => "Population Based Health Survey (PBHS) Round-1", "person" => "DHR MRHRU Network", "status" => "Ongoing"],
+            ["title" => "Food Scarcity & Economic Impact on Mental Health Post COVID-19", "person" => "MRHRU Research Team", "status" => "Completed / Published"]
+        ],
+        "people" => [
+            ["name" => "Nodal Officer", "role" => "ICMR-NITHR, Jabalpur"],
+            ["name" => "Co-Nodal Officer", "role" => "Pt. J.N.M. Medical College, Raipur"],
+            ["name" => "Project Research Scientist - II", "role" => "Medical / Non-Medical"],
+            ["name" => "Project Technical Assistant (Research)", "role" => "Project Technical Support III"],
+            ["name" => "Project Technical Assistant (Statistician)", "role" => "Project Technical Support III"],
+            ["name" => "Project Associate (Multipurpose)", "role" => "Administrative Support"]
+        ],
+        "publications" => [
+            "Jain K, Rathore V, Singh N, et al. Prevalence, Characteristics, and Associated Factors of Suspected Chronic Kidney Disease of Unknown Etiology in Supebeda Village of Chhattisgarh. Indian J Nephrol. 2026. Doi: 10.25259/IJN_372_2025 (IF: 0.8)",
+            "Rehman T, Mitra S, Gawit KG, et al. Continuum of care after newborn screening for sickle cell disease: Multinational evidence from a systematic review and meta-analysis. Br J Haematol. 2026. doi: 10.1111/bjh.70319. (IF: 3.9)",
+            "Ghate JR, Gulati A, Mishra A, et al. Association of socio-demographic and dietary factors for metabolic syndrome: A comparative study among tribal and non-tribal population. Clinical Epidemiology and Global Health. 2025;34:102087. doi: 10.1016/j.cegh.2025.102087. (IF: 2.3)",
+            "Gahwai D, Dayama S, Mishra A, et al. Food scarcity and decrease in income are associated with depression after COVID-19 pandemic in rural settings. Front Public Health. 2025;13:1526300. doi: 10.3389/fpubh.2025.1526300. (IF: 3.0)",
+            "Gupta P, Shrivastava S, Kumar R. Musculoskeletal complications in sickle cell disease: Pathophysiology, diagnosis and management. Best Pract Res Clin Rheumatol. 2025 May;39(2):102033. doi: 10.1016/j.berh.2025.102033. (IF: 4.5)",
+            "Rao E, Chandraker SK, Singh MM, et al. Global distribution of Î²-thalassemia mutations: An Update. Gene. 2023 Nov 23:148022. doi: 10.1016/j.gene.2023.148022. (IF: 3.5 Cited by 118)",
+            "Chandraker SK, Kumar R. Biogenic biocompatible silver nanoparticles: a promising antibacterial agent. Biotechnol Genet Eng Rev. 2024 Dec;40(4):3113-3147. doi: 10.1080/02648725.2022.2106084. (IF: 4.20 Cited by 77)",
+            "Kumar R, Chandraker SK, Das A. Controlling Sickle Cell Disease: The need of the hour. Clinical Epidemiology and Global Health. 2023;21:101302. (IF: 2.6)"
+        ],
+        "gallery" => [
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.19.jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.19 (1).jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.20.jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.20 (1).jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.21.jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.21 (1).jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.22.jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.23.jpeg",
+            "jheet_images/WhatsApp Image 2026-11-04 at 16.42.27.jpeg"
+        ],
+        "contact" => [
+            "address" => "Model Rural Health Research Unit (MRHRU), Community Health Centre (CHC) Jheet, Patan Block, District Durg, Chhattisgarh - 491111",
+            "email" => "nirthjbp@gmail.com",
+            "phone" => "+91-761-2672238 / 2672973"
+        ]
     ],
     [
-        "id" => "unit-two",
-        "name" => "MRHRU Unit II",
-        "partner" => "Partner institution details to be added",
-        "projects" => [
-            ["title" => "Project I", "person" => "Person I", "status" => "Details to be updated"],
-            ["title" => "Project II", "person" => "Person II", "status" => "Details to be updated"],
+        "id" => "mrhru-datia",
+        "name" => "MRHRU Datia (M.P.)",
+        "fullName" => "Model Rural Health Research Unit (MRHRU), Datia",
+        "location" => "Datia District, Madhya Pradesh",
+        "authority" => "Department of Health Research (DHR)",
+        "authorityDesc" => "Ministry of Health & Family Welfare, Govt. of India",
+        "mentor" => "ICMR-NITHR, Jabalpur, M.P.",
+        "mentorDesc" => "Mentoring Institute (National Institute for Tribal Health Research)",
+        "partner" => "Government Medical College, Datia, M.P.",
+        "partnerDesc" => "Linked Government Medical College",
+        "lracStatus" => "Operational",
+        "profile" => "MRHRU Datia is established in Madhya Pradesh under the Department of Health Research (DHR) scheme, mentored by ICMR-NITHR Jabalpur in collaboration with Government Medical College, Datia, to develop health research infrastructure in rural and underserved districts.",
+        "objectives" => [
+            "Create health research infrastructure in rural and underserved areas of Madhya Pradesh.",
+            "Transfer modern diagnostic and clinical technologies to rural healthcare facilities.",
+            "Conduct community-level research on regional health priorities."
         ],
-        "people" => ["Person I", "Person II", "Person III"],
-    ],
+        "projects" => [
+            ["title" => "Population Based Health Survey (PBHS)", "person" => "DHR MRHRU Network", "status" => "Ongoing"],
+            ["title" => "Baseline Health & Morbidity Profiling", "person" => "MRHRU Research Team", "status" => "Ongoing"]
+        ],
+        "people" => [
+            ["name" => "Nodal Officer", "role" => "ICMR-NITHR, Jabalpur"],
+            ["name" => "Co-Nodal Officer", "role" => "GMC Datia"],
+            ["name" => "Project Research Staff", "role" => "MRHRU Datia Core Team"]
+        ],
+        "publications" => [],
+        "gallery" => [],
+        "contact" => [
+            "address" => "Model Rural Health Research Unit (MRHRU), Datia District, Madhya Pradesh",
+            "email" => "nirthjbp@gmail.com",
+            "phone" => "+91-761-2672238"
+        ]
+    ]
 ];
 
 function mrhruEscape(string $value): string
@@ -314,6 +390,45 @@ function mrhruEscape(string $value): string
             margin-top: 9px;
         }
 
+        .mrhru-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .mrhru-gallery-item {
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid var(--mrhru-line);
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .mrhru-gallery-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+        }
+
+        .mrhru-gallery-item img {
+            width: 100%;
+            height: 170px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .mrhru-badge {
+            display: inline-block;
+            background: #e2f1fa;
+            color: var(--mrhru-blue);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-top: 6px;
+        }
+
         @media (max-width: 760px) {
             .mrhru-partners,
             .mrhru-people {
@@ -322,6 +437,10 @@ function mrhruEscape(string $value): string
 
             .mrhru-detail-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .mrhru-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             }
 
             .mrhru-content-card {
@@ -346,9 +465,6 @@ function mrhruEscape(string $value): string
 
         <main class="main-section mrhru-main">
             <div class="mrhru-container">
-                <p class="mrhru-placeholder-note">
-                    This page uses generic placeholders. Replace the sample unit, project, personnel, and contact details with approved information before publication.
-                </p>
 
                 <div class="mrhru-unit-tabs" role="tablist" aria-label="MRHRU units">
                     <?php foreach ($mrhruUnits as $index => $unit): ?>
@@ -375,18 +491,18 @@ function mrhruEscape(string $value): string
                         <div class="mrhru-partners">
                             <article class="mrhru-card">
                                 <span class="mrhru-card-label">Programme authority</span>
-                                <h2>Details to be confirmed</h2>
-                                <p>Programme and scheme information will be added here.</p>
+                                <h2><?php echo mrhruEscape($unit["authority"] ?? "Department of Health Research (DHR)"); ?></h2>
+                                <p><?php echo mrhruEscape($unit["authorityDesc"] ?? "Ministry of Health & Family Welfare, Govt. of India"); ?></p>
                             </article>
                             <article class="mrhru-card">
                                 <span class="mrhru-card-label">Mentoring institute</span>
-                                <h2>ICMR-NITHR, Jabalpur</h2>
-                                <p>National Institute of Research in Tribal Health</p>
+                                <h2><?php echo mrhruEscape($unit["mentor"] ?? "ICMR-NITHR, Jabalpur"); ?></h2>
+                                <p><?php echo mrhruEscape($unit["mentorDesc"] ?? "National Institute for Tribal Health Research"); ?></p>
                             </article>
                             <article class="mrhru-card">
-                                <span class="mrhru-card-label">Unit partner</span>
+                                <span class="mrhru-card-label">Linked medical college</span>
                                 <h2><?php echo mrhruEscape($unit["partner"]); ?></h2>
-                                <p>Partner and location information will be added when confirmed.</p>
+                                <p><?php echo mrhruEscape($unit["partnerDesc"] ?? "Government Medical College Partner"); ?></p>
                             </article>
                         </div>
 
@@ -423,22 +539,23 @@ function mrhruEscape(string $value): string
                                 id="<?php echo mrhruEscape($unit["id"]); ?>-overview"
                                 role="tabpanel"
                                 aria-labelledby="<?php echo mrhruEscape($unit["id"]); ?>-overview-tab">
-                                <h2>About <?php echo mrhruEscape($unit["name"]); ?></h2>
-                                <p>
-                                    This section provides an overview of <?php echo mrhruEscape($unit["name"]); ?>.
-                                    Add the approved unit profile, location, objectives, and services here.
-                                </p>
+                                <h2>About <?php echo mrhruEscape($unit["fullName"] ?? $unit["name"]); ?></h2>
+                                <p><strong>Location:</strong> <?php echo mrhruEscape($unit["location"] ?? ""); ?></p>
+                                <p><?php echo mrhruEscape($unit["profile"] ?? ""); ?></p>
+                                <?php if (!empty($unit["lracStatus"])): ?>
+                                    <p><span class="mrhru-badge">LRAC Status: <?php echo mrhruEscape($unit["lracStatus"]); ?></span></p>
+                                <?php endif; ?>
                                 <div class="mrhru-detail-grid">
                                     <article class="mrhru-detail">
-                                        <h3>Unit profile</h3>
-                                        <p>Background and operational details are to be added.</p>
+                                        <h3>Unit mandate</h3>
+                                        <p>Bridge modern health technologies and rural healthcare delivery, facilitating implementation research on regional disease burdens.</p>
                                     </article>
                                     <article class="mrhru-detail">
                                         <h3>Key objectives</h3>
                                         <ul>
-                                            <li>Support health research relevant to local communities.</li>
-                                            <li>Strengthen research capacity and collaboration.</li>
-                                            <li>Share evidence to inform public health practice.</li>
+                                            <?php foreach ($unit["objectives"] as $obj): ?>
+                                                <li><?php echo mrhruEscape($obj); ?></li>
+                                            <?php endforeach; ?>
                                         </ul>
                                     </article>
                                 </div>
@@ -451,12 +568,11 @@ function mrhruEscape(string $value): string
                                 aria-labelledby="<?php echo mrhruEscape($unit["id"]); ?>-team-tab"
                                 hidden>
                                 <h2>Team</h2>
-                                <p>Personnel names and designations are placeholders pending confirmation.</p>
                                 <ul class="mrhru-people">
                                     <?php foreach ($unit["people"] as $person): ?>
                                         <li class="mrhru-person">
-                                            <strong><?php echo mrhruEscape($person); ?></strong>
-                                            <span>Designation and role to be updated</span>
+                                            <strong><?php echo mrhruEscape(is_array($person) ? $person["name"] : $person); ?></strong>
+                                            <span><?php echo mrhruEscape(is_array($person) ? $person["role"] : "Role to be updated"); ?></span>
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -498,11 +614,15 @@ function mrhruEscape(string $value): string
                                 aria-labelledby="<?php echo mrhruEscape($unit["id"]); ?>-publications-tab"
                                 hidden>
                                 <h2>Publications</h2>
-                                <p>Publication titles, authors, and links will be added after verification.</p>
-                                <ul class="mrhru-list">
-                                    <li>Publication I — details to be added.</li>
-                                    <li>Publication II — details to be added.</li>
-                                </ul>
+                                <?php if (!empty($unit["publications"])): ?>
+                                    <ol class="mrhru-list">
+                                        <?php foreach ($unit["publications"] as $pub): ?>
+                                            <li><?php echo mrhruEscape($pub); ?></li>
+                                        <?php endforeach; ?>
+                                    </ol>
+                                <?php else: ?>
+                                    <p>Publication titles and links will be updated as research studies progress.</p>
+                                <?php endif; ?>
                             </section>
 
                             <section
@@ -511,8 +631,19 @@ function mrhruEscape(string $value): string
                                 role="tabpanel"
                                 aria-labelledby="<?php echo mrhruEscape($unit["id"]); ?>-activities-tab"
                                 hidden>
-                                <h2>Activities and workshops</h2>
-                                <p>Information about unit activities and events will be added here.</p>
+                                <h2>Activities & Facility Gallery</h2>
+                                <p>Field surveys, community outreach camps, laboratory diagnostics, and workshops conducted under <?php echo mrhruEscape($unit["fullName"] ?? $unit["name"]); ?>.</p>
+                                <?php if (!empty($unit["gallery"])): ?>
+                                    <div class="mrhru-gallery">
+                                        <?php foreach ($unit["gallery"] as $img): ?>
+                                            <div class="mrhru-gallery-item">
+                                                <img src="<?php echo mrhruEscape($img); ?>" alt="<?php echo mrhruEscape($unit["name"]); ?>" loading="lazy">
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <p>Activity records and gallery updates will be posted here.</p>
+                                <?php endif; ?>
                             </section>
 
                             <section
@@ -521,8 +652,11 @@ function mrhruEscape(string $value): string
                                 role="tabpanel"
                                 aria-labelledby="<?php echo mrhruEscape($unit["id"]); ?>-contact-tab"
                                 hidden>
-                                <h2>Contact and location</h2>
-                                <p>Unit address, telephone, and email details are to be confirmed.</p>
+                                <h2>Contact & Location</h2>
+                                <p><strong>Address:</strong> <?php echo mrhruEscape($unit["contact"]["address"] ?? ""); ?></p>
+                                <p><strong>Mentoring Institute:</strong> ICMR - National Institute of Research in Tribal Health (ICMR-NITHR), Nagpur Road, PO - Garha, Jabalpur, M.P. - 482003</p>
+                                <p><strong>Email:</strong> <a href="mailto:<?php echo mrhruEscape($unit["contact"]["email"] ?? "nirthjbp@gmail.com"); ?>"><?php echo mrhruEscape($unit["contact"]["email"] ?? "nirthjbp@gmail.com"); ?></a></p>
+                                <p><strong>Phone:</strong> <?php echo mrhruEscape($unit["contact"]["phone"] ?? "+91-761-2672238"); ?></p>
                             </section>
                         </div>
                     </section>

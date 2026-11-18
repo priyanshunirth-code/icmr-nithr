@@ -12,6 +12,15 @@ include("language.php");
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ICMR-NITHR</title>
     <?php include("GlobalCss.php"); ?>
+    <!-- Priyanshu (3-Nov-2026): Fix the holiday calendar layout by loading Tailwind before its utility classes are rendered. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        corePlugins: {
+          preflight: false,
+        }
+      }
+    </script>
     <!-- <link href="assets/css/bootstrap-rtl.css" rel="stylesheet"> Uncomment it if needed! -->
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -532,6 +541,10 @@ include("language.php");
                     <img src="/assets/new-gif.gif" alt="New" width="30" height="17">
                     Call for M.Sc. dissertation at ICMR-NITHR, Jabalpur (Jan-June 2027)
                     <a href="student_corner.php">View</a>
+                    |
+                    <img src="/assets/new-gif.gif" alt="New" width="30" height="17">
+                    Circular regarding the submission of "Life Certificate" (November 2026) for Institute Pensioners/Family Pensioners
+                    <a href="/Life_Certificate_for_November_2026.pdf" target="_blank">View</a>
                     <!--
                     <img src="/assets/new-gif.gif" alt="New" width="30" height="17">
                     Result - Project Scientist C (Medical) for Walk-in-Interview held on 08.01.2026 at 09:00 AM
@@ -556,7 +569,7 @@ include("language.php");
                     <img src="/assets/new-gif.gif" alt="New" width="30" height="17">
                     Declaration of Result of Walk-in Interview Held for various projects
                     <a href="https://www.nirth.res.in/vacancies.php">Result</a>
-                    |
+
                     <!--
                     <img src="/assets/new-gif.gif" alt="New" width="30" height="17">
                     Hands-on workshop on Large Language Models (LLMs) for clinical & translational research | ICMR-NITHR
@@ -1358,15 +1371,6 @@ startScroll();
                         </div>
                     </div>
             </div>
-<!-- Tailwind CDN & Config (Preflight Disabled to protect Bootstrap) -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    corePlugins: {
-      preflight: false,
-    }
-  }
-</script>
 <div class="py-10">
     <div class="max-w-[1170px] mx-auto px-4">
         <div class="flex flex-col lg:flex-row gap-8">

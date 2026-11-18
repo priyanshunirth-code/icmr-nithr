@@ -18,7 +18,7 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <title>ICMR NITHR | Tenders</title>
-         
+
     <?php include("GlobalCss.php"); ?>
 
 
@@ -28,10 +28,10 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-  
+
    <?php include("GlobalJs.php"); ?>
 
-  
+
     <style>
         /* ROOT COLORS FOR HEADER */
         :root {
@@ -297,7 +297,12 @@
                                               </tr>
                                           </thead>
                                           <tbody>
-                                              
+                                                <tr>
+                                                  <td class="sn"></td>
+                                                  <td>Store e-receipt no. (total 12 receipts) - PAN India PM-ABHIM<?php if ($isRecentTender('18-11-2026')): ?><img src="new.gif" /><?php endif; ?></td>
+                                                  <td>18-11-2026</td>
+                                                  <td><a href="tender/2026/Store_e-receiptno.(total12receipt)_PANIndia-PM-Abhim_01_correspondence_1446922_2026_NIRTH1_18-11-2026_03-46-11pm.pdf" target="_blank" class="v-btn">View</a></td>
+                                                </tr>
                                                 <tr>
                                                   <td class="sn"></td>
                                                   <td>Non IT Professional Service with Reverse Charge Mechanism- 200000; CA GEM/2026/B/8182739<?php if ($isRecentTender('26-10-2026')): ?><img src="new.gif" /><?php endif; ?></td>
@@ -444,11 +449,11 @@
           for (var i = 0; i < a.length; i++) {
               a[i].innerHTML = (i + 1) + ".";
           }
-          
+
           document.getElementById('searchInput').addEventListener('keyup', function() {
               var filter = this.value.toUpperCase();
               var rows = document.querySelectorAll('.v-table tbody tr');
-              
+
               var visibleCount = 1;
               for (var i = 0; i < rows.length; i++) {
                   var rowText = rows[i].textContent || rows[i].innerText;

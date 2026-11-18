@@ -1,6 +1,6 @@
 <style>
     #footer {
-     
+
     }
     .cs-footer-widgets .row,
     .cs-footer-logo-holder,
@@ -10,16 +10,16 @@
         text-align: left;
         justify-content: center;
     }
-    
+
     .cs-footer-widgets .row {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between; /* or space-evenly */
     }
-    
+
 </style>
 
-<footer id="footer"> 
+<footer id="footer">
 		<div class="cs-footer-widgets">
             <div class="container">
                 <div class="row">
@@ -43,7 +43,7 @@
                                 	<i class="icon-pin"></i>
                                     <p>09:00 AM to 05:30 PM (Mon-Fri)</p>
                                 </li>
-                            </ul>	
+                            </ul>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
@@ -53,7 +53,7 @@
                                 <li><a href="vacancies.php"><?php echo $lang['career_opportunity']; ?></a></li>
                                 <li><a href="staff.php"><?php echo $lang['staff_list']; ?></a></li>
                                 <li><a href="employees_corner.php"><?php echo $lang['employees_corner']; ?></a></li>
-                            </ul>	
+                            </ul>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
@@ -64,10 +64,10 @@
                                 <li><a href="https://dhr.gov.in/" target="_blank"><?php echo $lang['department_of_health_research']; ?></a></li>
                                 <li><a href="https://mohfw.gov.in/" target="_blank"><?php echo $lang['ministry_of_health_family_welfare']; ?></a></li>
                                 <li><a href="https://tribal.nic.in/" target="_blank"><?php echo $lang['ministry_of_tribal_affairs']; ?></a></li>
-                            </ul>	
+                            </ul>
                         </div>
                     </div>
-                  
+
                     </div>
                 </div>
             </div>
@@ -76,7 +76,7 @@
             	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 	<div class="cs-footer-logo-holder center">
                         <div class="cs-footer-nav">
-                            
+
                             <div class="footer-nav">
                             	<ul>
                                 	<li><a href="about.php"><?php echo $lang['about_us']; ?></a></li>
@@ -85,7 +85,7 @@
                                     <li><a href="publications.php"><?php echo $lang['publication']; ?></a></li>
                                     <li><a href="contact.php"><?php echo $lang['contact_us']; ?></a></li>
                                 </ul>
-                            </div>                       
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -102,11 +102,11 @@
                 </div>
             </div>
         </div>
-        
-        
+
+
 	</footer>
-	
-	
+
+
 	<!-- Google Translate Script -->
 <script type="text/javascript">
 function googleTranslateElementInit() {

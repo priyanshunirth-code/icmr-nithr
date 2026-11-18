@@ -6,7 +6,7 @@
 
                     <!-- About Dropdown -->
                     <li class="menu-item-has-children">
-                        <a href="about.php" class="menu-link <?php echo ($_SERVER['PHP_SELF'] == '/about.php') ? 'active' : ''; ?>"> 
+                        <a href="about.php" class="menu-link <?php echo ($_SERVER['PHP_SELF'] == '/about.php') ? 'active' : ''; ?>">
                             <?php echo $lang['about']; ?> </a>
                             <ul class="submenu">
                                 <li><a href="about.php"><?php echo $lang['profile']; ?></a></li><BR>
@@ -23,21 +23,21 @@
                     <li><a href="contact.php" class="menu-link"><?php echo $lang['contact_us']; ?></a></li>
 
                     <!-- Social Media Links -->
-                    <li><a href="https://www.facebook.com/ICMRNITHR" target="_blank" class="menu-link"><i class="icon-facebook2"></i></a></li>
+                    <li><a href="https://www.facebook.com/ICMRNITHR" target="_blank" class="menu-link social-link"><i class="icon-facebook2 social-icon-default"></i><svg class="social-icon-hover" viewBox="0 0 24 24" aria-label="Facebook" role="img" xmlns="http://www.w3.org/2000/svg"><path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.973h-1.514c-1.491 0-1.956.93-1.956 1.885v2.264h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z"/></svg></a></li>
              <li>
                  <a href="https://x.com/ICMRNITHR" target="_blank" class="menu-link"><svg viewBox="0 0 1200 1227" width="15" height="15" xmlns="http://www.w3.org/2000/svg">
       <path fill="#000"  d="M714.163 519.284L1160.89 0H1054.07L667.137 450.887L358.497 0H0L468.492 682.997L0 1226.37H106.82L515.515 751.907L841.503 1226.37H1200L714.137 519.284H714.163ZM568.548 687.828L521.05 619.857L132.671 64.455H297.87L611.12 513.42L658.618 581.391L1067.64 1162.04H902.441L568.548 687.854V687.828Z"/>
     </svg></a></li>
-    <li><a href="https://www.youtube.com/channel/UCB09DISRpmIJfisD3cQDo9g" target="_blank" class="menu-link"><i class="icon-youtube3"></i></a></li>
-                    
+    <li><a href="https://www.youtube.com/channel/UCB09DISRpmIJfisD3cQDo9g" target="_blank" class="menu-link social-link"><i class="icon-youtube3 social-icon-default"></i><svg class="social-icon-hover" viewBox="0 0 24 24" aria-label="YouTube" role="img" xmlns="http://www.w3.org/2000/svg"><path fill="#FF0000" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.016 3.016 0 0 0 .502 6.186C0 8.065 0 12 0 12s0 3.935.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.935 24 12 24 12s0-3.935-.502-5.814ZM9.545 15.568V8.432L15.818 12l-6.273 3.568Z"/></svg></a></li>
+
                     <!-- GTranslate Widget ADDED HERE (Fixes Refresh Issue & UI) -->
                     <li>
                         <div class="gtranslate_wrapper"></div>
                         <script>window.gtranslateSettings = {"default_language":"en","native_language_names":true,"languages":["en","hi","te","ta","bn","mr","gu","pa"],"wrapper_selector":".gtranslate_wrapper","flag_size":20,"alt_flags":{"en":"usa"}}</script>
                         <script src="https://cdn.gtranslate.net/widgets/latest/dropdown.js" defer></script>
                     </li>
-                    <!-- END GTranslate -->                    
-                    
+                    <!-- END GTranslate -->
+
                     <!-- Language Switch -->
                     <!--
                     <?php if($_SESSION['language']=='hi'){ ?>
@@ -66,7 +66,7 @@
     background-color: #ffffff !important; /* Light gray background */
    /
     max-width: 1000px !important; /* Limit max width */
-  
+
 
 /* Global Styles */
 body {
@@ -74,7 +74,7 @@ body {
     background-color: #ffffff;
     font-family: 'Poppins', sans-serif;
     transition: background 0.3s ease-in-out;
-    
+
 
 }
 .top-nav {
@@ -102,6 +102,34 @@ body {
 .top-nav li a:hover {
     background-color: #66a3ff;
     color: white;
+}
+
+.social-link .social-icon-hover {
+    display: none;
+    width: 22px;
+    height: 22px;
+    vertical-align: middle;
+}
+
+.social-link,
+.social-link:hover {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    transform: none !important;
+}
+
+.social-link:hover .social-icon-default {
+    display: none;
+}
+
+.social-link:hover .social-icon-hover {
+    display: inline-block;
 }
 
 /* Navigation Bar */
@@ -146,7 +174,7 @@ body {
     font-weight: 700;
 }
 .top-nav {
-    
+
     padding: 0px;
     display: flex;
     justify-content: space-between;
@@ -278,9 +306,9 @@ body {
 
 @media (max-width: 768px) {
     .main-header {
- 
+
        background: #f4f4f4 !important; /* Same background as .main-header */
-   
+
     }
     .navbar {
         padding: 10px 15px;
@@ -304,7 +332,7 @@ body {
     }
 }
 .main-header {
-   
+
 }
 </style>
 
@@ -325,8 +353,8 @@ body {
                 <p>I C M R - National Institute for Tribal Health Research, Jabalpur</p>
                 <p>Dept. of Health Research, Ministry of Health and Family Welfare, Govt. of India</p>
             </div>
-          
-            
+
+
         </div>
     </div>
 </div>      </div>
