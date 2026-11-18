@@ -15,7 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start([
         'use_strict_mode' => 1,
         'cookie_httponly' => true,
-        'cookie_samesite' => 'Strict',
+        'cookie_samesite' => 'Lax',
         'cookie_secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
     ]);
 }
@@ -172,13 +172,21 @@ function is_api_request(): bool {
 }
 
 function require_csrf(): void {
-    $token = $_POST['csrf'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    $token = (string)($_POST['csrf'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
     if (!hash_equals($_SESSION['csrf'] ?? '', $token)) {
         if (is_api_request()) {
-            json_response(['error' => 'Invalid CSRF token'], 419);
+            json_response(['error' => 'Invalid or expired CSRF token'], 419);
         }
         http_response_code(419);
-        exit('Invalid CSRF token');
+        echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Session Expired</title>';
+        echo '<link rel="stylesheet" href="assets/css/app.css"></head>';
+        echo '<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#f5f7fa;margin:0;">';
+        echo '<div style="background:#fff;padding:32px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.08);text-align:center;max-width:400px;">';
+        echo '<h3 style="margin-top:0;color:#123c65;">Session Expired</h3>';
+        echo '<p style="color:#556882;font-size:14px;">Your session or security token has expired. Please return to the login page.</p>';
+        echo '<a href="index.php" style="display:inline-block;margin-top:12px;background:#125599;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;">Return to Portal</a>';
+        echo '</div></body></html>';
+        exit;
     }
 }
 

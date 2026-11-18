@@ -1,5 +1,12 @@
 <?php
 declare(strict_types=1);
+
+require_once __DIR__ . '/includes/bootstrap.php';
+
+if (current_user() !== null) {
+    header('Location: index.php');
+    exit;
+}
 ?><!doctype html>
 <html lang="en">
 <head>
@@ -21,7 +28,7 @@ declare(strict_types=1);
             <p class="muted">Sign in to manage IT assets, IP records, and support operations.</p>
         </div>
         <?php if (!empty($login_error)): ?><div class="alert alert-error"><?= e($login_error) ?></div><?php endif; ?>
-        <form method="post" class="login-form">
+        <form method="post" action="index.php" class="login-form">
             <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="action" value="login">
             <div class="account-toggle" role="group" aria-label="Account type">

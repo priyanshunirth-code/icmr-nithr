@@ -23,10 +23,13 @@ function is_locked_out(PDO $pdo, string $username, string $ip): bool {
 
 // Authentication handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login') {
-    require_csrf();
-    $username = trim((string)($_POST['username'] ?? ''));
-    $password = (string)($_POST['password'] ?? '');
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $token = (string)($_POST['csrf'] ?? '');
+    if (!hash_equals($_SESSION['csrf'] ?? '', $token)) {
+        $login_error = 'Session expired or security token mismatch. Please sign in again.';
+    } else {
+        $username = trim((string)($_POST['username'] ?? ''));
+        $password = (string)($_POST['password'] ?? '');
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
     if (is_locked_out($pdo, $username, $ip)) {
         $login_error = 'Too many failed attempts. Account temporarily locked for 15 minutes.';
@@ -83,11 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
             $login_error = 'Invalid credentials.';
         }
     }
+    }
 }
 
 // POST logout with CSRF protection
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logout') {
-    require_csrf();
     $user_id = current_user()['id'] ?? null;
     if ($user_id) {
         log_audit($pdo, 'logout', 'auth', (string)$user_id);
