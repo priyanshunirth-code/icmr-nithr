@@ -39,6 +39,7 @@ if ($type === 'inventory') {
     $headers = ['ip_address', 'hostname', 'mac_address', 'device_type', 'ad_status', 'department', 'location', 'device_status', 'remarks'];
     $deviceType = trim((string)($_GET['device_type'] ?? ''));
     $adStatus = trim((string)($_GET['ad_status'] ?? ''));
+    $deviceStatus = trim((string)($_GET['device_status'] ?? ''));
 
     if ($deviceType !== '' && $deviceType !== 'All device types') {
         $conditions[] = 'device_type = ?';
@@ -47,6 +48,10 @@ if ($type === 'inventory') {
     if ($adStatus !== '' && $adStatus !== 'All AD statuses') {
         $conditions[] = 'ad_status = ?';
         $params[] = $adStatus;
+    }
+    if ($deviceStatus !== '' && $deviceStatus !== 'All states' && $deviceStatus !== 'All statuses') {
+        $conditions[] = 'device_status = ?';
+        $params[] = $deviceStatus;
     }
     if ($search !== '') {
         $conditions[] = '(ip_address LIKE ? OR hostname LIKE ? OR mac_address LIKE ? OR device_type LIKE ? OR ad_status LIKE ? OR department LIKE ? OR location LIKE ? OR device_status LIKE ? OR remarks LIKE ?)';

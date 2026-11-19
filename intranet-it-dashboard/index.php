@@ -25,7 +25,12 @@ function is_locked_out(PDO $pdo, string $username, string $ip): bool {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login') {
     $token = (string)($_POST['csrf'] ?? '');
     if (!hash_equals($_SESSION['csrf'] ?? '', $token)) {
-        $login_error = 'Session expired or security token mismatch. Please sign in again.';
+        // Session was wiped (e.g. server restart). Regenerate token and
+        // redirect back to login so the fresh form loads with the new token.
+        unset($_SESSION['csrf']);
+        csrf_token(); // seed a fresh token
+        header('Location: index.php');
+        exit;
     } else {
         $username = trim((string)($_POST['username'] ?? ''));
         $password = (string)($_POST['password'] ?? '');
@@ -112,13 +117,34 @@ if (!$logged_in) {
 }
 
 // Metrics for Dashboard
-$stats = ['assets' => 0, 'ips' => 0];
+$stats = [
+    'assets' => 0,
+    'assets_assigned' => 0,
+    'assets_available' => 0,
+    'ips' => 0,
+    'ips_online' => 0,
+    'ips_other' => 0,
+    'ad_registered' => 0,
+    'non_ad' => 0,
+    'ad_compliance_pct' => 0,
+];
 $recent_assets = [];
 $recent_ips = [];
 
 if ($pdo) {
     $stats['assets'] = (int)$pdo->query('SELECT COUNT(*) FROM it_inventory')->fetchColumn();
+    $stats['assets_assigned'] = (int)$pdo->query("SELECT COUNT(*) FROM it_inventory WHERE status = 'Assigned'")->fetchColumn();
+    $stats['assets_available'] = (int)$pdo->query("SELECT COUNT(*) FROM it_inventory WHERE status = 'Available'")->fetchColumn();
+
     $stats['ips'] = (int)$pdo->query('SELECT COUNT(*) FROM ip_directory')->fetchColumn();
+    $stats['ips_online'] = (int)$pdo->query("SELECT COUNT(*) FROM ip_directory WHERE device_status = 'Online'")->fetchColumn();
+    $stats['ips_other'] = (int)$pdo->query("SELECT COUNT(*) FROM ip_directory WHERE device_status != 'Online' OR device_status IS NULL")->fetchColumn();
+
+    $stats['ad_registered'] = (int)$pdo->query("SELECT COUNT(*) FROM ip_directory WHERE ad_status = 'AD Registered'")->fetchColumn();
+    $stats['non_ad'] = (int)$pdo->query("SELECT COUNT(*) FROM ip_directory WHERE ad_status = 'Non-AD'")->fetchColumn();
+    $ad_total = $stats['ad_registered'] + $stats['non_ad'];
+    $stats['ad_compliance_pct'] = $ad_total > 0 ? (int)round(($stats['ad_registered'] / $ad_total) * 100) : 0;
+
     $recent_assets = $pdo->query('
         SELECT asset_id, device_name, category, assigned_to, status, updated_at
         FROM it_inventory
@@ -168,8 +194,8 @@ $is_master = can('manage_users');
             <button type="button" id="sidebarToggle" class="hamburger-btn" aria-label="Toggle menu">☰</button>
             <div class="mobile-brand">ICMR-NITHR</div>
             <div class="topbar-branding">
-                <span class="hindi-title">आई.सी.एम.आर. - राष्ट्रीय जनजातीय स्वास्थ्य अनुसंधान संस्थान, जबलपुर</span>
-                <span class="eng-title">ICMR - National Institute for Tribal Health Research, Jabalpur</span>
+                <span class="topbar-title">ICMR–NITHR, Jabalpur</span>
+                <span class="topbar-subtitle">Internal IT Administration</span>
             </div>
             <div class="global-search">
                 <span>⌕</span>
@@ -183,17 +209,30 @@ $is_master = can('manage_users');
                 </div>
             </div>
             <div class="topbar-user-actions">
-                <div class="topbar-user-badge">
-                    <span class="topbar-avatar"><?= e(strtoupper(substr($user['username'], 0, 1))) ?></span>
-                    <span class="topbar-username"><?= e($user['username']) ?></span>
-                    <span class="user-role-badge status <?= $user['role'] === 'Master' ? 'assigned' : 'available' ?>"><?= e($user['role']) ?></span>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <button type="button" class="profile-trigger" id="profileTrigger" aria-expanded="false" aria-haspopup="true">
+                        <span class="topbar-avatar"><?= e(strtoupper(substr($user['username'], 0, 1))) ?></span>
+                        <span class="topbar-username"><?= e($user['username']) ?></span>
+                        <span class="user-role-badge status <?= $user['role'] === 'Master' ? 'assigned' : 'available' ?>"><?= e($user['role']) ?></span>
+                        <span class="profile-chevron" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="profile-menu" id="profileMenu" role="menu">
+                        <div class="profile-menu-header">
+                            <span class="profile-menu-username"><?= e($user['username']) ?></span>
+                            <span class="user-role-badge status <?= $user['role'] === 'Master' ? 'assigned' : 'available' ?>"><?= e($user['role']) ?></span>
+                        </div>
+                        <div class="profile-menu-divider"></div>
+                        <button type="button" class="profile-menu-item" data-modal="passwordModal" role="menuitem">
+                            <span class="menu-icon">🔑</span>
+                            <span>Change Password</span>
+                        </button>
+                        <div class="profile-menu-divider"></div>
+                        <button type="button" class="profile-menu-item profile-menu-logout" data-modal="logoutModal" role="menuitem">
+                            <span class="menu-icon">⎋</span>
+                            <span>Logout</span>
+                        </button>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-outline btn-sm" data-modal="passwordModal">Change Password</button>
-                <form method="post" action="index.php" class="topbar-logout-form">
-                    <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
-                    <input type="hidden" name="action" value="logout">
-                    <button type="submit" class="btn btn-outline btn-logout btn-sm">Logout</button>
-                </form>
             </div>
         </header>
 
@@ -205,43 +244,72 @@ $is_master = can('manage_users');
 
         <!-- DASHBOARD VIEW -->
         <section id="dashboard" class="view active">
-            <div class="dashboard-hero-row">
-                <div class="dashboard-user-greeting">
-                    <h1>Welcome, <?= e($user['username']) ?> <span class="user-role-badge status <?= $user['role'] === 'Master' ? 'assigned' : 'available' ?>"><?= e($user['role']) ?></span></h1>
-                    <p>Overview of IT assets and IP records at <?= e($config['institution_name']) ?>.</p>
-                </div>
-                <div class="metric-cards-right">
-                    <article class="metric-card">
-                        <span>Total IT Assets</span>
-                        <strong><?= $stats['assets'] ?></strong>
-                    </article>
-                    <article class="metric-card">
-                        <span>Total IP Records</span>
-                        <strong><?= $stats['ips'] ?></strong>
-                    </article>
-                </div>
+            <div class="dashboard-header">
+                <h1>Welcome, <?= e($user['username']) ?></h1>
+                <p>Overview of IT assets and IP records at <?= e($config['institution_name']) ?>.</p>
+            </div>
+
+            <div class="metrics-grid">
+                <article class="metric-card">
+                    <span class="metric-label">Total IT Assets</span>
+                    <strong class="metric-val"><?= $stats['assets'] ?></strong>
+                    <small class="metric-subtext"><?= $stats['assets_assigned'] ?> Assigned · <?= $stats['assets_available'] ?> Available</small>
+                </article>
+                <article class="metric-card">
+                    <span class="metric-label">Total IP Records</span>
+                    <strong class="metric-val"><?= $stats['ips'] ?></strong>
+                    <small class="metric-subtext"><?= $stats['ips_online'] ?> Online · <?= $stats['ips_other'] ?> Unknown/Offline</small>
+                </article>
+                <article class="metric-card">
+                    <span class="metric-label">AD Compliance</span>
+                    <strong class="metric-val"><?= $stats['ad_compliance_pct'] ?>%</strong>
+                    <small class="metric-subtext"><?= $stats['ad_registered'] ?> AD Registered · <?= $stats['non_ad'] ?> Non-AD</small>
+                </article>
+                <article class="metric-card metric-card-quickactions">
+                    <span class="metric-label">Quick Actions</span>
+                    <div class="quick-actions-btns">
+                        <?php if (can('write')): ?>
+                        <button type="button" class="btn btn-primary btn-sm" data-modal="inventoryModal">+ Add Asset</button>
+                        <button type="button" class="btn btn-outline btn-sm" data-modal="ipModal">+ Add IP</button>
+                        <?php else: ?>
+                        <button type="button" class="btn btn-primary btn-sm" data-view-target="inventory">IT Inventory</button>
+                        <button type="button" class="btn btn-outline btn-sm" data-view-target="directory">IP Directory</button>
+                        <?php endif; ?>
+                    </div>
+                    <small class="metric-subtext">Instant management shortcuts</small>
+                </article>
             </div>
             <div class="dashboard-tables">
                 <article class="panel">
                     <div class="panel-heading">
                         <h2>Recent IT Assets</h2>
-                        <button type="button" class="btn btn-outline" data-view-target="inventory">View All</button>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <select id="dashAssetCategoryFilter" style="padding:4px 8px;font-size:12px;border:1px solid #b8c8d8;border-radius:4px;outline:none;">
+                                <option value="">All categories</option>
+                                <option value="Desktop">Desktop</option>
+                                <option value="Laptop">Laptop</option>
+                                <option value="Printer">Printer</option>
+                                <option value="Switch">Switch</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <button type="button" class="btn btn-outline" data-view-target="inventory">View All</button>
+                        </div>
                     </div>
                     <div class="table-wrap">
-                        <table>
+                        <table id="recentAssetsTable">
                             <thead>
                                 <tr>
-                                    <th>Asset ID</th>
-                                    <th>Device Name</th>
-                                    <th>Category</th>
-                                    <th>Assigned To</th>
-                                    <th>Status</th>
+                                    <th data-sort="asset_id" class="sortable">Asset ID</th>
+                                    <th data-sort="device_name" class="sortable">Device Name</th>
+                                    <th data-sort="category" class="sortable">Category</th>
+                                    <th data-sort="assigned_to" class="sortable">Assigned To</th>
+                                    <th data-sort="status" class="sortable">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($recent_assets as $row): ?>
                                 <tr>
-                                    <td class="strong"><?= e($row['asset_id']) ?></td>
+                                    <td class="strong cell-mono"><?= e($row['asset_id']) ?></td>
                                     <td><?= e($row['device_name']) ?></td>
                                     <td><?= e($row['category']) ?></td>
                                     <td><?= e($row['assigned_to'] ?: '—') ?></td>
@@ -257,26 +325,34 @@ $is_master = can('manage_users');
                 <article class="panel">
                     <div class="panel-heading">
                         <h2>Recent IP Records</h2>
-                        <button type="button" class="btn btn-outline" data-view-target="directory">View All</button>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <select id="dashIpStatusFilter" style="padding:4px 8px;font-size:12px;border:1px solid #b8c8d8;border-radius:4px;outline:none;">
+                                <option value="">All states</option>
+                                <option value="Online">Online</option>
+                                <option value="Offline">Offline</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                            <button type="button" class="btn btn-outline" data-view-target="directory">View All</button>
+                        </div>
                     </div>
                     <div class="table-wrap">
-                        <table>
+                        <table id="recentIpsTable">
                             <thead>
                                 <tr>
-                                    <th>IP Address</th>
-                                    <th>Hostname</th>
-                                    <th>Device Type</th>
-                                    <th>AD Status</th>
-                                    <th>State</th>
+                                    <th data-sort="ip_address" class="sortable">IP Address</th>
+                                    <th data-sort="hostname" class="sortable">Hostname</th>
+                                    <th data-sort="device_type" class="sortable">Device Type</th>
+                                    <th data-sort="ad_status" class="sortable">AD Status</th>
+                                    <th data-sort="device_status" class="sortable">State</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($recent_ips as $row): ?>
                                 <tr>
-                                    <td class="strong"><?= e($row['ip_address']) ?></td>
+                                    <td class="strong cell-mono"><?= e($row['ip_address']) ?></td>
                                     <td><?= e($row['hostname']) ?></td>
                                     <td><?= e($row['device_type']) ?></td>
-                                    <td><span class="status <?= $row['ad_status'] === 'AD Registered' ? 'assigned' : 'repair' ?>"><?= e($row['ad_status']) ?></span></td>
+                                    <td><span class="status <?= $row['ad_status'] === 'AD Registered' ? 'ad-registered' : 'non-ad' ?>"><?= e($row['ad_status']) ?></span></td>
                                     <td><span class="dot-status <?= strtolower($row['device_status']) ?>"><i></i><?= e($row['device_status']) ?></span></td>
                                 </tr>
                                 <?php endforeach; if (!$recent_ips): ?>
@@ -306,6 +382,7 @@ $is_master = can('manage_users');
                 </div>
             </div>
             <div class="toolbar">
+                <input type="search" id="inventorySearch" class="table-search" placeholder="Search inventory by ID, name, user, IP…">
                 <select id="inventoryCategoryFilter">
                     <option value="">All categories</option>
                     <option value="Desktop">Desktop</option>
@@ -330,15 +407,15 @@ $is_master = can('manage_users');
                     <table id="inventoryTable">
                         <thead>
                             <tr>
-                                <th>Asset ID</th>
-                                <th>Device Name</th>
-                                <th>Category</th>
-                                <th>Brand / Model</th>
-                                <th>Assigned To</th>
-                                <th>Department</th>
-                                <th>Location</th>
-                                <th>IP Address</th>
-                                <th>Status</th>
+                                <th data-sort="asset_id" class="sortable">Asset ID</th>
+                                <th data-sort="device_name" class="sortable">Device Name</th>
+                                <th data-sort="category" class="sortable">Category</th>
+                                <th data-sort="brand" class="sortable">Brand / Model</th>
+                                <th data-sort="assigned_to" class="sortable">Assigned To</th>
+                                <th data-sort="department" class="sortable">Department</th>
+                                <th data-sort="location" class="sortable">Location</th>
+                                <th data-sort="ip_address" class="sortable">IP Address</th>
+                                <th data-sort="status" class="sortable">Status</th>
                                 <?php if (can('edit') || can('delete')): ?>
                                 <th>Actions</th>
                                 <?php endif; ?>
@@ -370,6 +447,7 @@ $is_master = can('manage_users');
                 </div>
             </div>
             <div class="toolbar">
+                <input type="search" id="ipSearch" class="table-search" placeholder="Search IP directory by IP, host, MAC, dept…">
                 <select id="ipDeviceTypeFilter">
                     <option value="">All device types</option>
                     <option value="Desktop">Desktop</option>
@@ -383,6 +461,12 @@ $is_master = can('manage_users');
                     <option value="AD Registered">AD Registered</option>
                     <option value="Non-AD">Non-AD</option>
                 </select>
+                <select id="ipDeviceStatusFilter">
+                    <option value="">All states</option>
+                    <option value="Online">Online</option>
+                    <option value="Offline">Offline</option>
+                    <option value="Unknown">Unknown</option>
+                </select>
                 <?php if (can('export')): ?>
                 <a class="btn btn-outline" id="ipExportBtn" href="api/export.php?type=ip">Export CSV</a>
                 <?php endif; ?>
@@ -392,14 +476,14 @@ $is_master = can('manage_users');
                     <table id="ipTable">
                         <thead>
                             <tr>
-                                <th>IP Address</th>
-                                <th>Hostname</th>
-                                <th>Device Type</th>
-                                <th>AD Status</th>
-                                <th>MAC Address</th>
-                                <th>Department</th>
-                                <th>Location</th>
-                                <th>Status</th>
+                                <th data-sort="ip_address" class="sortable">IP Address</th>
+                                <th data-sort="hostname" class="sortable">Hostname</th>
+                                <th data-sort="device_type" class="sortable">Device Type</th>
+                                <th data-sort="ad_status" class="sortable">AD Status</th>
+                                <th data-sort="mac_address" class="sortable">MAC Address</th>
+                                <th data-sort="department" class="sortable">Department</th>
+                                <th data-sort="location" class="sortable">Location</th>
+                                <th data-sort="device_status" class="sortable">Status</th>
                                 <?php if (can('edit') || can('delete')): ?>
                                 <th>Actions</th>
                                 <?php endif; ?>
@@ -535,7 +619,7 @@ $is_master = can('manage_users');
         </section>
 
         <footer class="official-footer">
-            ICMR-National Institute of Research in Tribal Health (NIRTH), Jabalpur · Nagpur Road, P.O. – Garha, Jabalpur – 482 003, Madhya Pradesh, India<br>
+            ICMR–National Institute for Tribal Health Research (NITHR), Jabalpur · Nagpur Road, P.O. – Garha, Jabalpur – 482 003, Madhya Pradesh, India<br>
             <small>Dept. of Health Research, Ministry of Health and Family Welfare, Govt. of India · Tel: +91-761-2370800</small>
         </footer>
     </main>
@@ -740,6 +824,27 @@ $is_master = can('manage_users');
                 <button class="btn btn-primary btn-block" type="submit">Update Password</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div id="logoutModal" class="modal">
+    <div class="modal-card" style="max-width:420px;">
+        <div class="modal-heading">
+            <h2>Confirm Logout</h2>
+            <button type="button" class="modal-close">×</button>
+        </div>
+        <div style="padding:16px 0 22px;color:#50657f;font-size:14px;line-height:1.5;">
+            Are you sure you want to end your session and log out of the IT Administration Dashboard?
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button type="button" class="btn btn-outline modal-close">Cancel</button>
+            <form method="post" action="index.php" style="margin:0;">
+                <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="logout">
+                <button type="submit" class="btn btn-primary" style="background:#d34d4d;border-color:#d34d4d;">Sign Out</button>
+            </form>
+        </div>
     </div>
 </div>
 

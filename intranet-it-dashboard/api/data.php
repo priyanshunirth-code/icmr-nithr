@@ -23,7 +23,7 @@ $conditions = [];
 $params = [];
 
 if ($type === 'inventory') {
-    $allowedSort = ['id', 'asset_id', 'device_name', 'category', 'status', 'assigned_to', 'department', 'location', 'created_at'];
+    $allowedSort = ['id', 'asset_id', 'device_name', 'category', 'brand', 'model', 'serial_number', 'status', 'assigned_to', 'department', 'location', 'ip_address', 'created_at'];
     if (!in_array($sort, $allowedSort, true)) $sort = 'id';
 
     $category = trim((string)($_GET['category'] ?? ''));
@@ -61,11 +61,12 @@ if ($type === 'inventory') {
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
 } else {
-    $allowedSort = ['id', 'ip_address', 'hostname', 'device_type', 'ad_status', 'device_status', 'department', 'location', 'created_at'];
+    $allowedSort = ['id', 'ip_address', 'hostname', 'device_type', 'ad_status', 'mac_address', 'device_status', 'department', 'location', 'created_at'];
     if (!in_array($sort, $allowedSort, true)) $sort = 'id';
 
     $deviceType = trim((string)($_GET['device_type'] ?? ''));
     $adStatus = trim((string)($_GET['ad_status'] ?? ''));
+    $deviceStatus = trim((string)($_GET['device_status'] ?? ''));
 
     if ($deviceType !== '' && $deviceType !== 'All device types') {
         $conditions[] = 'device_type = ?';
@@ -74,6 +75,10 @@ if ($type === 'inventory') {
     if ($adStatus !== '' && $adStatus !== 'All AD statuses') {
         $conditions[] = 'ad_status = ?';
         $params[] = $adStatus;
+    }
+    if ($deviceStatus !== '' && $deviceStatus !== 'All states' && $deviceStatus !== 'All statuses') {
+        $conditions[] = 'device_status = ?';
+        $params[] = $deviceStatus;
     }
     if ($search !== '') {
         $conditions[] = '(ip_address LIKE ? OR hostname LIKE ? OR mac_address LIKE ? OR device_type LIKE ? OR ad_status LIKE ? OR department LIKE ? OR location LIKE ? OR device_status LIKE ? OR remarks LIKE ?)';

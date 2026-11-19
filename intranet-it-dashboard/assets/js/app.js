@@ -52,6 +52,7 @@
     document.getElementById('sidebarBackdrop')?.classList.remove('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    if (id === 'dashboard') filterDashboardTables();
     if (id === 'inventory') loadInventory(1);
     if (id === 'directory') loadDirectory(1);
     if (id === 'users' && isMaster) loadUsers();
@@ -178,11 +179,40 @@
     });
   });
 
-  // Logout handler
-  document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    document.getElementById('logoutForm')?.submit();
-  });
+  // Profile dropdown menu toggle & keyboard/outside-click navigation
+  const profileDropdown = document.getElementById('profileDropdown');
+  const profileTrigger = document.getElementById('profileTrigger');
+  const profileMenu = document.getElementById('profileMenu');
+
+  if (profileTrigger && profileMenu && profileDropdown) {
+    profileTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = profileDropdown.classList.toggle('open');
+      profileTrigger.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!profileDropdown.contains(e.target)) {
+        profileDropdown.classList.remove('open');
+        profileTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && profileDropdown.classList.contains('open')) {
+        profileDropdown.classList.remove('open');
+        profileTrigger.setAttribute('aria-expanded', 'false');
+        profileTrigger.focus();
+      }
+    });
+
+    profileMenu.querySelectorAll('[data-modal]').forEach(item => {
+      item.addEventListener('click', () => {
+        profileDropdown.classList.remove('open');
+        profileTrigger.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
 
   // Debounce helper
   function debounce(fn, delay = 300) {
@@ -197,13 +227,16 @@
   // IT INVENTORY LOGIC
   // ==========================================
   let invPage = 1;
+  let invSort = 'id';
+  let invOrder = 'DESC';
   const globalSearch = document.getElementById('globalSearch');
+  const invSearch = document.getElementById('inventorySearch');
   const invCat = document.getElementById('inventoryCategoryFilter');
   const invStat = document.getElementById('inventoryStatusFilter');
   const invExportBtn = document.getElementById('inventoryExportBtn');
 
   function getSearchQuery() {
-    return globalSearch ? globalSearch.value.trim() : '';
+    return (globalSearch?.value || invSearch?.value || '').trim();
   }
 
   function updateInvExportUrl() {
@@ -213,6 +246,8 @@
       search: getSearchQuery(),
       category: invCat ? invCat.value : '',
       status: invStat ? invStat.value : '',
+      sort: invSort,
+      order: invOrder,
     });
     invExportBtn.href = `api/export.php?${q.toString()}`;
   }
@@ -231,6 +266,8 @@
       search: getSearchQuery(),
       category: invCat ? invCat.value : '',
       status: invStat ? invStat.value : '',
+      sort: invSort,
+      order: invOrder,
     });
 
     try {
@@ -273,7 +310,7 @@
 
       data.rows.forEach(row => {
         const tr = el('tr');
-        tr.appendChild(el('td', { className: 'strong', textContent: row.asset_id || '' }));
+        tr.appendChild(el('td', { className: 'strong cell-mono', textContent: row.asset_id || '' }));
         tr.appendChild(el('td', { textContent: row.device_name || '' }));
         tr.appendChild(el('td', { textContent: row.category || '' }));
         tr.appendChild(el('td', { textContent: `${row.brand || ''} ${row.model || ''}`.trim() || '—' }));
@@ -282,7 +319,7 @@
         tr.appendChild(el('td', { textContent: row.location || '—' }));
 
         // IP Address cell with warning indicator if not in directory
-        const ipCell = el('td');
+        const ipCell = el('td', { className: 'cell-mono' });
         if (row.ip_address) {
           ipCell.appendChild(document.createTextNode(row.ip_address));
           if (row.ip_in_directory === 0) {
@@ -372,8 +409,12 @@
   // IP DIRECTORY LOGIC
   // ==========================================
   let ipPage = 1;
+  let ipSort = 'id';
+  let ipOrder = 'DESC';
+  const ipSearch = document.getElementById('ipSearch');
   const ipTypeFilter = document.getElementById('ipDeviceTypeFilter');
   const ipAdFilter = document.getElementById('ipAdStatusFilter');
+  const ipStatusFilter = document.getElementById('ipDeviceStatusFilter');
   const ipExportBtn = document.getElementById('ipExportBtn');
 
   function updateIpExportUrl() {
@@ -383,6 +424,9 @@
       search: getSearchQuery(),
       device_type: ipTypeFilter ? ipTypeFilter.value : '',
       ad_status: ipAdFilter ? ipAdFilter.value : '',
+      device_status: ipStatusFilter ? ipStatusFilter.value : '',
+      sort: ipSort,
+      order: ipOrder,
     });
     ipExportBtn.href = `api/export.php?${q.toString()}`;
   }
@@ -401,6 +445,9 @@
       search: getSearchQuery(),
       device_type: ipTypeFilter ? ipTypeFilter.value : '',
       ad_status: ipAdFilter ? ipAdFilter.value : '',
+      device_status: ipStatusFilter ? ipStatusFilter.value : '',
+      sort: ipSort,
+      order: ipOrder,
     });
 
     try {
@@ -443,7 +490,7 @@
 
       data.rows.forEach(row => {
         const tr = el('tr');
-        tr.appendChild(el('td', { className: 'strong', textContent: row.ip_address || '' }));
+        tr.appendChild(el('td', { className: 'strong cell-mono', textContent: row.ip_address || '' }));
         tr.appendChild(el('td', { textContent: row.hostname || '' }));
         tr.appendChild(el('td', { textContent: row.device_type || '' }));
 
@@ -506,31 +553,146 @@
 
   if (ipTypeFilter) ipTypeFilter.addEventListener('change', () => loadDirectory(1));
   if (ipAdFilter) ipAdFilter.addEventListener('change', () => loadDirectory(1));
+  if (ipStatusFilter) ipStatusFilter.addEventListener('change', () => loadDirectory(1));
 
-  // Global search input handling
-  if (globalSearch) {
-    globalSearch.addEventListener('input', () => {
-      const q = globalSearch.value;
-      const activeView = document.querySelector('.view.active')?.id;
-      if (activeView === 'directory') {
-        filterTableRows('ipTable', q);
-      } else if (activeView === 'inventory') {
-        filterTableRows('inventoryTable', q);
-      } else if (activeView === 'dashboard') {
-        showView('inventory');
-        filterTableRows('inventoryTable', q);
-      }
-    });
+  // ==========================================
+  // DASHBOARD FILTERS & CLIENT SORTING
+  // ==========================================
+  function filterDashboardTables() {
+    const q = getSearchQuery().toLowerCase();
+    const cat = (document.getElementById('dashAssetCategoryFilter')?.value || '').toLowerCase();
+    const state = (document.getElementById('dashIpStatusFilter')?.value || '').toLowerCase();
 
-    globalSearch.addEventListener('input', debounce(() => {
-      const activeView = document.querySelector('.view.active')?.id;
-      if (activeView === 'directory') {
-        loadDirectory(1);
-      } else {
-        loadInventory(1);
+    const assetTable = document.getElementById('recentAssetsTable');
+    if (assetTable) {
+      let visible = 0;
+      assetTable.querySelectorAll('tbody tr').forEach(r => {
+        if (r.querySelector('.empty')) return;
+        const text = r.textContent.toLowerCase();
+        const rowCat = (r.children[2]?.textContent || '').toLowerCase();
+        const show = (!q || text.includes(q)) && (!cat || rowCat === cat);
+        r.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      let emptyMsg = assetTable.querySelector('.empty-filter-row');
+      if (visible === 0) {
+        if (!emptyMsg) {
+          emptyMsg = el('tr', { className: 'empty-filter-row' }, el('td', { colSpan: 5, className: 'empty', textContent: 'No matching assets found.' }));
+          assetTable.querySelector('tbody').appendChild(emptyMsg);
+        }
+        emptyMsg.style.display = '';
+      } else if (emptyMsg) {
+        emptyMsg.style.display = 'none';
       }
-    }, 300));
+    }
+
+    const ipTable = document.getElementById('recentIpsTable');
+    if (ipTable) {
+      let visible = 0;
+      ipTable.querySelectorAll('tbody tr').forEach(r => {
+        if (r.querySelector('.empty')) return;
+        const text = r.textContent.toLowerCase();
+        const rowState = (r.children[4]?.textContent || '').toLowerCase();
+        const show = (!q || text.includes(q)) && (!state || rowState.includes(state));
+        r.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      let emptyMsg = ipTable.querySelector('.empty-filter-row');
+      if (visible === 0) {
+        if (!emptyMsg) {
+          emptyMsg = el('tr', { className: 'empty-filter-row' }, el('td', { colSpan: 5, className: 'empty', textContent: 'No matching IP records found.' }));
+          ipTable.querySelector('tbody').appendChild(emptyMsg);
+        }
+        emptyMsg.style.display = '';
+      } else if (emptyMsg) {
+        emptyMsg.style.display = 'none';
+      }
+    }
   }
+
+  document.getElementById('dashAssetCategoryFilter')?.addEventListener('change', filterDashboardTables);
+  document.getElementById('dashIpStatusFilter')?.addEventListener('change', filterDashboardTables);
+
+  function makeTableClientSortable(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const headers = table.querySelectorAll('th.sortable');
+    headers.forEach((th, colIdx) => {
+      th.addEventListener('click', () => {
+        const isAsc = th.classList.contains('asc');
+        headers.forEach(h => h.classList.remove('asc', 'desc'));
+        th.classList.toggle('asc', !isAsc);
+        th.classList.toggle('desc', isAsc);
+
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty') && !r.classList.contains('empty-filter-row'));
+        rows.sort((a, b) => {
+          const tA = (a.children[colIdx]?.textContent || '').trim();
+          const tB = (b.children[colIdx]?.textContent || '').trim();
+          return (!isAsc ? 1 : -1) * tA.localeCompare(tB, undefined, { numeric: true, sensitivity: 'base' });
+        });
+        rows.forEach(r => tbody.appendChild(r));
+      });
+    });
+  }
+  makeTableClientSortable('recentAssetsTable');
+  makeTableClientSortable('recentIpsTable');
+
+  // Server-side sort headers for Inventory & Directory
+  document.querySelectorAll('#inventoryTable th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.sort;
+      if (invSort === field) {
+        invOrder = (invOrder === 'ASC') ? 'DESC' : 'ASC';
+      } else {
+        invSort = field;
+        invOrder = 'ASC';
+      }
+      document.querySelectorAll('#inventoryTable th.sortable').forEach(h => h.classList.remove('asc', 'desc'));
+      th.classList.add(invOrder.toLowerCase());
+      loadInventory(1);
+    });
+  });
+
+  document.querySelectorAll('#ipTable th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.sort;
+      if (ipSort === field) {
+        ipOrder = (ipOrder === 'ASC') ? 'DESC' : 'ASC';
+      } else {
+        ipSort = field;
+        ipOrder = 'ASC';
+      }
+      document.querySelectorAll('#ipTable th.sortable').forEach(h => h.classList.remove('asc', 'desc'));
+      th.classList.add(ipOrder.toLowerCase());
+      loadDirectory(1);
+    });
+  });
+
+  // Synchronized search inputs
+  const debouncedLoadInv = debounce(() => loadInventory(1), 300);
+  const debouncedLoadDir = debounce(() => loadDirectory(1), 300);
+
+  function handleSearchInput(val) {
+    if (globalSearch && globalSearch.value !== val) globalSearch.value = val;
+    if (invSearch && invSearch.value !== val) invSearch.value = val;
+    if (ipSearch && ipSearch.value !== val) ipSearch.value = val;
+
+    const activeView = document.querySelector('.view.active')?.id || 'dashboard';
+    if (activeView === 'dashboard') {
+      filterDashboardTables();
+    } else if (activeView === 'inventory') {
+      filterTableRows('inventoryTable', val);
+      debouncedLoadInv();
+    } else if (activeView === 'directory') {
+      filterTableRows('ipTable', val);
+      debouncedLoadDir();
+    }
+  }
+
+  globalSearch?.addEventListener('input', (e) => handleSearchInput(e.target.value));
+  invSearch?.addEventListener('input', (e) => handleSearchInput(e.target.value));
+  ipSearch?.addEventListener('input', (e) => handleSearchInput(e.target.value));
 
   // ==========================================
   // DELETE HANDLER (BY ID ONLY)
